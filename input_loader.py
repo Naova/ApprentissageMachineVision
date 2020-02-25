@@ -4,7 +4,7 @@ from PIL import Image
 import pathlib
 import platform
 import numpy as np
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 
 def get_file_paths(dossier):
