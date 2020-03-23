@@ -37,6 +37,7 @@ if __name__ == '__main__':
     xml_paths = get_xml_paths(sys.argv[1])
     print("Loading from {}".format(sys.argv[1]))
     infosBallBox = []
+    infosBallBox.append("xCenter,yCenter,radius,imgFile\n")
 
     for path in xml_paths:
         xMin, xMax, yMin, yMax,imgPath = read_ball_box_xml(path)
