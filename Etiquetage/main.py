@@ -4,15 +4,18 @@ from PIL import Image, ImageTk
 import math
 import numpy as np
 import csv
+import ast
 import sys
+sys.path.insert(0,'..')
+import config as cfg
 
 class Entree:
-    def __init__(self, image_nom:str, x:int, y:int, balle_presente:bool):
+    def __init__(self, image_nom:str, x:int, y:int, balle_presente:bool, radius = -1):
         self.image_nom = image_nom
         self.center_x = x
         self.center_y = y
-        self.radius = -1
         self.balle_presente = balle_presente
+        self.radius = radius
 
     def to_csv_line(self):
         return str(self.center_x) + "," + str(self.center_y) + "," + str(self.radius) + "," + self.image_nom
@@ -29,7 +32,8 @@ class Entree:
     def __repr__(self):
         return self.image_nom + " " + str(self.center_x) + " " + str(self.center_y) + " " + str(self.radius) + " " + str(self.balle_presente)
 
-def fill_images(fichiers):
+#retourne une liste de PIL.Image a partir d'une liste de chemins d'acces
+def get_actual_images(fichiers):
     images = []
     for fichier_image in fichiers:
         image = Image.open(str(fichier_image))
@@ -39,12 +43,18 @@ def fill_images(fichiers):
 entrees = []
 entree_courante = None
 index_courant = -1
+images = []
+
+input_directory = cfg.dossier_PNG
+csv_file = cfg.csv_etiquettes
 
 #avance d'une image
 def afficher_prochaine_image():
     global index_courant
     index_courant += 1
+    #si on arrive a la fin du dataset, sauvegarde et quitte
     if index_courant == len(images):
+        save_to_csv()
         window.destroy()
         return
     canvas.create_image(0, 0, anchor=NW, image=images[index_courant][1])
@@ -79,34 +89,39 @@ def right_click_callback(event):
     afficher_prochaine_image()
 
 
-if __name__ == '__main__':
-    window = Tk()
+def save_to_csv(event=None):
+    with open(csv_file, 'w', newline='') as output_file:
+        writer = csv.DictWriter(output_file, ['xCenter','yCenter','radius','imgFile','bContainsBall'])
+        writer.writeheader()
+        for e in entrees:
+            writer.writerow(e.as_csv_dict())
 
-    if len(sys.argv) > 1:
-        input_directory = sys.argv[1]
-    else:
-        input_directory = "..\\..\\Dataset_PNG\\"
-    if len(sys.argv) > 2:
-        output_file = sys.argv[2]
-    else:
-        output_file = 'out.csv'
+window = Tk()
+canvas = Canvas(window, width = 240, height = 320)
+canvas.focus_set()
+canvas.pack()
+canvas.bind("a", left_arrow_callback)
+canvas.bind("<Button-1>", left_click_callback)
+canvas.bind("<Button-3>", right_click_callback)
+canvas.bind("s", save_to_csv)
 
+def main():
+    global images
+    global index_courant
     dossier_images = Path(input_directory).glob('**/*')
-    fichiers = [x for x in dossier_images if x.is_file()]
-    images = fill_images(fichiers)
+    #charge le fichier s'il est deja rempli
+    with open(csv_file, 'r') as input_file:
+        reader = csv.DictReader(input_file)
+        for line in reader:
+            entrees.append(Entree(line['imgFile'], int(line['xCenter']), int(line['yCenter']), ast.literal_eval(line['bContainsBall']), int(line['radius'])))
+    images_paths = [x for x in dossier_images if x.is_file()]
+    images = get_actual_images(images_paths)
+    index_courant = len(entrees) - 1
 
-    canvas = Canvas(window, width = 240, height = 320)
-    canvas.focus_set()
-    canvas.pack()
-    canvas.bind("a", left_arrow_callback)
-    canvas.bind("<Button-1>", left_click_callback)
-    canvas.bind("<Button-3>", right_click_callback)
     afficher_prochaine_image()
 
     window.mainloop()
 
-    with open(output_file, 'w', newline='') as csv_file:
-        writer = csv.DictWriter(csv_file, ['xCenter','yCenter','radius','imgFile','bContainsBall'])
-        writer.writeheader()
-        for e in entrees:
-            writer.writerow(e.as_csv_dict())
+
+if __name__ == '__main__':
+    main()
