@@ -17,9 +17,6 @@ class Entree:
         self.balle_presente = balle_presente
         self.radius = radius
 
-    def to_csv_line(self):
-        return str(self.center_x) + "," + str(self.center_y) + "," + str(self.radius) + "," + self.image_nom
-
     def as_csv_dict(self):
         d = {}
         d['xCenter'] = self.center_x
@@ -61,7 +58,7 @@ def afficher_prochaine_image():
     print(images[index_courant][0])
 
 #revient une image en arriere
-def left_arrow_callback(event):
+def left_arrow_callback(event=None):
     global index_courant
     entrees.pop(-1)
     index_courant -= 1
@@ -82,13 +79,19 @@ def left_click_callback(event):
         afficher_prochaine_image()
 
 #l'image n'a pas de balle, passe a la suivante
-def right_click_callback(event):
+def right_click_callback(event=None):
     global entree_courante
     entrees.append(Entree(images[index_courant][0], -1, -1, False))
     entree_courante = None
     afficher_prochaine_image()
 
+#saute une image si on veut ne pas la prendre en compte dans le dataset
+def skip_image(event=None):
+    global entree_courante
+    entree_courante = None
+    afficher_prochaine_image()
 
+#sauvegarde toutes les entrees dans un fichier CSV
 def save_to_csv(event=None):
     with open(csv_file, 'w', newline='') as output_file:
         writer = csv.DictWriter(output_file, ['xCenter','yCenter','radius','imgFile','bContainsBall'])
@@ -97,13 +100,14 @@ def save_to_csv(event=None):
             writer.writerow(e.as_csv_dict())
 
 window = Tk()
-canvas = Canvas(window, width = 240, height = 320)
+canvas = Canvas(window, width = cfg.image_width, height = cfg.image_height)
 canvas.focus_set()
 canvas.pack()
 canvas.bind("a", left_arrow_callback)
 canvas.bind("<Button-1>", left_click_callback)
 canvas.bind("<Button-3>", right_click_callback)
 canvas.bind("s", save_to_csv)
+canvas.bind("d", skip_image)
 
 def main():
     global images
