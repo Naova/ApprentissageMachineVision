@@ -42,7 +42,7 @@ def lire_entrees():
             containsBall = False
             if row['bContainsBall'] == 'True':
                 containsBall = True
-            nom = row['imgFile'].split('.')[0]
+            nom = row['imgFile']
             x_center = int(row['xCenter'])
             y_center = int(row['yCenter'])
             radius = int(row['radius'])

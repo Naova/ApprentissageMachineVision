@@ -33,7 +33,10 @@ class Entree:
 def get_actual_images(fichiers):
     images = []
     for fichier_image in fichiers:
-        image = Image.open(str(fichier_image))
+        f = np.fromfile(fichier_image, dtype=np.int32)
+        f = np.reshape(f, (cfg.image_height,cfg.image_width,3))
+        image = Image.fromarray(f.astype('uint8'))
+        #image = Image.open(str(fichier_image))
         images.append((str(fichier_image).split('\\')[-1], ImageTk.PhotoImage(image=image)))
     return images
 
@@ -42,7 +45,7 @@ entree_courante = None
 index_courant = -1
 images = []
 
-input_directory = cfg.dossier_PNG
+input_directory = cfg.dossier_brut
 csv_file = cfg.csv_etiquettes
 
 #avance d'une image

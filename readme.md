@@ -25,7 +25,7 @@ Il y a quelques endroits utiles pour changer des paramètres (au besoin):
 
 Du dépôt git 'ApprentissageMachineVision', exécuter le script `brut_to_png.py`. Ce script génèrera les images PNG à partir des données provenant du Nao. Ça n'est techniquement pas obligatoire, mais peut aider au déboguage.
 
-`Etiquetage/main.py`, qui lance le programme pour étiqueter les images.
+`etiquetage.py`, qui lance le programme pour étiqueter les images.
 
 Tous ces script utilisent le fichier `config.py` pour connaître les chemins vers les dossiers. À modifier pour vos chemins d'accès.
 
