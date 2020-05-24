@@ -52,11 +52,11 @@ def train_model(modele, x_train, y_train, x_validation, y_validation):
     modele.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
               loss='categorical_crossentropy',
               metrics=['accuracy'])
-    #es = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, restore_best_weights=True)
-    modele.fit(x_train, y_train, batch_size=200, epochs=1, validation_data=(x_validation, y_validation), callbacks=[])
+    es = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, restore_best_weights=True)
+    modele.fit(x_train, y_train, batch_size=200, epochs=1, validation_data=(x_validation, y_validation), callbacks=[es])
     return modele
 
-def display_model_prediction(prediction, x_val, y_val):
+def display_model_prediction(prediction, x_val):
     fig = plt.figure()
     fig.add_subplot(1, 2, 1)
     plt.imshow(x_val)
@@ -70,7 +70,7 @@ def display_model_prediction(prediction, x_val, y_val):
     plt.colorbar(orientation='horizontal')
     plt.show()
 
-x_train, y_train, x_validation, y_validation = create_dataset()
+x_train, y_train, x_validation, y_validation, x_test, y_test = create_dataset()
 shape = (320, 240, 3)
 modele = create_model(shape, cfg.yolo_categories)
 modele.summary()
@@ -78,8 +78,8 @@ modele = train_model(modele, x_train, y_train, x_validation, y_validation)
 
 for i in range(10):
     index = random.randint(0, 40)
-    v = [[val for val in x_val] for x_val in x_validation[index]]
+    v = [[val for val in x_val] for x_val in x_test[index]]
     prediction = modele.predict([[v]])[0][:,:,1]
-    display_model_prediction(prediction, x_validation[index], y_validation[index][:,:,1])
+    display_model_prediction(prediction, x_test[index])
     
-breakpoint()
+#breakpoint()

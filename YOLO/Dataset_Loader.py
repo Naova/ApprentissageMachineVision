@@ -53,17 +53,44 @@ def lire_entrees():
     return entrees
 
 def split_dataset(x, y):
-    ratio = 0.9
-    l = int(len(x) * ratio)
-    return x[:l], y[:l], x[l:], y[l:]
+    ratio_train = 0.85
+    ratio_validation = 0.1
+    ratio_test = 1.0 - (ratio_train + ratio_validation)
+
+    i = int(len(x) * ratio_train)
+    j = int(len(x) * ratio_validation)
+    k = int(len(x) * ratio_test)
+
+    t = np.zeros(i) #0
+    u = np.ones(j) #1
+    v = np.add(np.ones(j), np.ones(j)) #2
+
+    arr = np.concatenate([t, u, v])
+
+    while len(arr) > len(x):
+        arr = arr[:-1]
+    while len(arr) < len(x):
+        arr = np.append(arr, arr[0])
+    np.random.shuffle(arr)
+
+    x_train = [x[i] for i in np.where(arr == 0)[0]]
+    y_train = [y[i] for i in np.where(arr == 0)[0]]
+    x_val = [x[i] for i in np.where(arr == 1)[0]]
+    y_val = [y[i] for i in np.where(arr == 1)[0]]
+    x_test = [x[i] for i in np.where(arr == 2)[0]]
+    y_test = [y[i] for i in np.where(arr == 2)[0]]
+
+    return x_train, y_train, x_val, y_val, x_test, y_test
 
 def create_dataset():
     entrees = lire_entrees()
     x = [e.train_data() for e in entrees]
     y = [e.value_data() for e in entrees]
-    x_train, y_train, x_validation, y_validation = split_dataset(x, y)
+    x_train, y_train, x_validation, y_validation, x_test, y_test = split_dataset(x, y)
     x_train = np.array(x_train)
     y_train = np.array(y_train)
     x_validation = np.array(x_validation)
     y_validation = np.array(y_validation)
-    return x_train, y_train, x_validation, y_validation
+    x_test = np.array(x_test)
+    y_test = np.array(y_test)
+    return x_train, y_train, x_validation, y_validation, x_test, y_test
