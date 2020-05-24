@@ -58,7 +58,7 @@ def afficher_prochaine_image():
     print(images[index_courant][0])
 
 #revient une image en arriere
-def left_arrow_callback(event=None):
+def previous_image(event=None):
     global index_courant
     entrees.pop(-1)
     index_courant -= 1
@@ -103,7 +103,7 @@ window = Tk()
 canvas = Canvas(window, width = cfg.image_width, height = cfg.image_height)
 canvas.focus_set()
 canvas.pack()
-canvas.bind("a", left_arrow_callback)
+canvas.bind("a", previous_image)
 canvas.bind("<Button-1>", left_click_callback)
 canvas.bind("<Button-3>", right_click_callback)
 canvas.bind("s", save_to_csv)
@@ -118,9 +118,9 @@ def main():
         reader = csv.DictReader(input_file)
         for line in reader:
             entrees.append(Entree(line['imgFile'], int(line['xCenter']), int(line['yCenter']), ast.literal_eval(line['bContainsBall']), int(line['radius'])))
-    images_paths = [x for x in dossier_images if x.is_file()]
+    fichiers_entrees = [e.image_nom for e in entrees]
+    images_paths = [x for x in dossier_images if x.is_file() and str(x).split('\\')[-1] not in fichiers_entrees]
     images = get_actual_images(images_paths)
-    index_courant = len(entrees) - 1
 
     afficher_prochaine_image()
 
