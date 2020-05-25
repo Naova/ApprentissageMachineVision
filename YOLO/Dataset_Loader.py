@@ -53,7 +53,7 @@ def lire_entrees():
     return entrees
 
 def split_dataset(x, y):
-    ratio_train = 0.85
+    ratio_train = 0.88
     ratio_validation = 0.1
     ratio_test = 1.0 - (ratio_train + ratio_validation)
 
@@ -61,16 +61,16 @@ def split_dataset(x, y):
     j = int(len(x) * ratio_validation)
     k = int(len(x) * ratio_test)
 
-    t = np.zeros(i) #0
-    u = np.ones(j) #1
-    v = np.add(np.ones(j), np.ones(j)) #2
+    t = np.zeros(i) #0 = train
+    u = np.ones(j) #1 = validation
+    v = np.add(np.ones(k), np.ones(k)) #2 = test
 
     arr = np.concatenate([t, u, v])
 
     while len(arr) > len(x):
-        arr = arr[:-1]
+        arr = arr[1:]
     while len(arr) < len(x):
-        arr = np.append(arr, arr[0])
+        arr = np.append(arr, 0)
     np.random.shuffle(arr)
 
     x_train = [x[i] for i in np.where(arr == 0)[0]]

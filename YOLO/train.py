@@ -71,15 +71,16 @@ def display_model_prediction(prediction, x_val):
     plt.show()
 
 x_train, y_train, x_validation, y_validation, x_test, y_test = create_dataset()
-shape = (320, 240, 3)
+shape = (cfg.image_height, cfg.image_width, 3)
 modele = create_model(shape, cfg.yolo_categories)
 modele.summary()
 modele = train_model(modele, x_train, y_train, x_validation, y_validation)
 
-for i in range(10):
-    index = random.randint(0, 40)
-    v = [[val for val in x_val] for x_val in x_test[index]]
+for i in range(len(x_test)):
+    v = [[val for val in x_val] for x_val in x_test[i]]
     prediction = modele.predict([[v]])[0][:,:,1]
-    display_model_prediction(prediction, x_test[index])
-    
-#breakpoint()
+    display_model_prediction(prediction, x_test[i])
+
+modele.save('yolo_modele.h5', include_optimizer=False)
+
+breakpoint()

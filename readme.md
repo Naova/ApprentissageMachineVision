@@ -45,4 +45,4 @@ Il est aussi possible de sauter une image en appuyant sur la touche 'd'. Le fich
 
 ### Étape 4.
 
-Lancer le script `train.py`. Cela utilisera les fichiers étiquetés pour performer un entraînement d'un réseau de neurones et l'exportera (À FAIRE) dans un fichier HDF.
+Lancer le script `train.py`. Cela utilisera les fichiers étiquetés pour performer un entraînement d'un réseau de neurones et l'exportera dans un fichier HDF.
