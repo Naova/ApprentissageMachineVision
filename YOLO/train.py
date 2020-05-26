@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import random
 import numpy as np
 
+import convert
+
 import sys
 sys.path.insert(0,'..')
 import config as cfg
@@ -34,16 +36,12 @@ def create_model(shape:tuple, categories:int):
     x = add_conv_2d(x, 32, kernel(3), stride(1), True, True)
     x = MaxPool2D()(x)
 
-    x = add_conv_2d(x, 128, kernel(3), stride(2), True, True)
-    x = add_conv_2d(x, 64, kernel(1), stride(1), True, True)
-    x = add_conv_2d(x, 128, kernel(3), stride(1), True, True)
+    x = add_conv_2d(x, 64, kernel(3), stride(2), True, True)
+    x = add_conv_2d(x, 32, kernel(1), stride(1), True, True)
+    x = add_conv_2d(x, 64, kernel(3), stride(1), True, True)
     x = MaxPool2D()(x)
 
-    x = UpSampling2D()(x)
-
-    x = add_conv_2d(x, 128, kernel(3), stride(2), True, True)
-    x = add_conv_2d(x, 64, kernel(1), stride(1), True, True)
-    x = add_conv_2d(x, categories, kernel(1), stride(1), False, False)
+    #x = add_conv_2d(x, categories, kernel(1), stride(1), False, False)
     x = Conv2D(categories, kernel(1), activation='sigmoid')(x)
 
     return keras.models.Model(inputs, x)
@@ -81,6 +79,13 @@ for i in range(len(x_test)):
     prediction = modele.predict([[v]])[0][:,:,1]
     display_model_prediction(prediction, x_test[i])
 
-modele.save('yolo_modele.h5', include_optimizer=False)
+input_path = 'yolo_modele.h5'
+output_path = 'yolo_modele.json'
+
+modele.save(input_path, include_optimizer=False)
+
+sys.argv = ['', input_path, output_path]
+
+convert.main()
 
 breakpoint()
