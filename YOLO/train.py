@@ -19,6 +19,9 @@ import sys
 sys.path.insert(0,'..')
 import config as cfg
 
+def custom_accuracy(y_true, y_pred):
+    return K.mean(K.equal(y_true[:,:,:,4], K.round(y_pred[:,:,:,4])))
+
 def custom_loss(y_true, y_pred):
     obj_mask  = y_true[:,:,:,4]
     mask_shape = tf.shape(obj_mask)
@@ -76,7 +79,7 @@ def create_model(shape:tuple, nb_categories:int):
 def train_model(modele, x_train, y_train, x_validation, y_validation):
     modele.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
               loss=custom_loss,
-              metrics=['accuracy', 'binary_crossentropy'])
+              metrics=[custom_accuracy, 'binary_crossentropy'])
     es = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, restore_best_weights=True)
     modele.fit(x_train, y_train, batch_size=5, epochs=20, validation_data=(x_validation, y_validation), callbacks=[es])
     return modele
@@ -139,7 +142,7 @@ if cfg.retrain:
     modele.summary()
     modele = train_model(modele, x_train, y_train, x_validation, y_validation)
 else:
-    modele = keras.models.load_model(cfg.model_path, custom_objects={'custom_loss': custom_loss})
+    modele = keras.models.load_model(cfg.model_path, custom_objects={'custom_loss': custom_loss, 'custom_accuracy':custom_accuracy})
 
 
 for i in range(len(x_test)):
