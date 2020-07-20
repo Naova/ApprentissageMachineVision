@@ -659,7 +659,7 @@ def convert_sequential_to_model(model):
         funcmodel = Model([input_layer], [prev_layer], name=name)
         model = funcmodel
         if hasattr(model, '_inbound_nodes'):
-            model._inbound_nodes = inbound_nodes
+            model._inbound_nodes = _inbound_nodes 
         elif hasattr(model, 'inbound_nodes'):
             model.inbound_nodes = inbound_nodes
     assert model.layers

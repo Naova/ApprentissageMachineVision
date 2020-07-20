@@ -1,55 +1,63 @@
 import numpy as np
 from pathlib import Path
-import csv
+import json
 
 import sys
 sys.path.insert(0,'..')
 import config as cfg
 
-
-fichier_etiquetes_csv = cfg.csv_etiquettes
-
 def normaliser_image(image):
     return image/255
 
 class Entree:
-    def __init__(self, nom, centre_x, centre_y, radius, image, containsBall):
+    def __init__(self, nom, labels, image):
         self.nom = nom
-        self.centre_x = centre_x
-        self.centre_y = centre_y
-        self.radius = radius * 1.3
+        self.robots = [label for label in labels if label['categorie'] == 2]
+        self.balles = [label for label in labels if label['categorie'] == 1]
         self.image = normaliser_image(image)
-        self.containsBall = containsBall
     def train_data(self):
         return self.image
-    def value_data(self):
-        value = np.zeros((cfg.yolo_height, cfg.yolo_width, cfg.yolo_categories))
-        x = int(self.centre_x / cfg.image_width * cfg.yolo_width)
-        x = x if x < cfg.yolo_width else cfg.yolo_width - 1
-        y = int(self.centre_y / cfg.image_height * cfg.yolo_height)
-        y = y if y < cfg.yolo_height else cfg.yolo_height - 1
-        value[:,:,0] = 1
-        if self.containsBall:
-            value[y][x][1] = 1
-            value[y][x][0] = 0
+    def value_data_yolo(self):
+        value = np.zeros((cfg.yolo_height, cfg.yolo_width, 5 + cfg.nb_categories))
+        for balle in self.balles:
+            width = balle['right'] - balle['left']
+            height = balle['bottom'] - balle['top']
+            x = balle['left'] + width / 2
+            y = balle['top'] + height / 2
+            center_x = int(x / cfg.image_width * cfg.yolo_width)
+            center_y = int(y / cfg.image_height * cfg.yolo_height)
+            center = (center_y, center_x)
+            value[center][0] = x / cfg.image_width * cfg.yolo_width - center_x          #center_x
+            value[center][1] = y / cfg.image_height * cfg.yolo_height - center_y        #center_y
+            value[center][2] = width / cfg.image_width                                  #width
+            value[center][3] = height / cfg.image_height                                #height
+            value[center][4] = 1                                                        #objet present
+            value[center][5] = 1                                                        #classe balle
+        for robot in self.robots:
+            width = robot['right'] - robot['left']
+            height = robot['bottom'] - robot['top']
+            x = robot['left'] + width / 2
+            y = robot['top'] + height / 2
+            center_x = int(x / cfg.image_width * cfg.yolo_width)
+            center_y = int(y / cfg.image_height * cfg.yolo_height)
+            center = (center_y, center_x)
+            value[center][0] = x / cfg.image_width * cfg.yolo_width - center_x          #center_x
+            value[center][1] = y / cfg.image_height * cfg.yolo_height - center_y        #center_y
+            value[center][2] = width / cfg.image_width                                  #width
+            value[center][3] = height / cfg.image_height                                #height
+            value[center][4] = 1                                                        #objet present
+            value[center][6] = 1                                                        #classe robot
         return value
 
 def lire_entrees():
     entrees = []
-    with open(fichier_etiquetes_csv) as fichier:
-        reader = csv.DictReader(fichier)
-        for row in reader:
-            containsBall = False
-            if row['bContainsBall'] == 'True':
-                containsBall = True
-            nom = row['imgFile']
-            x_center = int(row['xCenter'])
-            y_center = int(row['yCenter'])
-            radius = int(row['radius'])
-            fichier_image = cfg.dossier_brut + nom
+    with open(cfg.json_etiquettes) as fichier:
+        labels = json.loads(fichier.read())
+        for image_label in labels:
+            fichier_image = cfg.dossier_brut + image_label
             image = np.fromfile(fichier_image, dtype=np.int32)
             image = np.reshape(image, (cfg.image_height, cfg.image_width, 3))
-            entrees.append(Entree(nom, x_center, y_center, radius, image, containsBall))
+            entrees.append(Entree(image_label, labels[image_label], image))
     return entrees
 
 def split_dataset(x, y):
@@ -85,7 +93,7 @@ def split_dataset(x, y):
 def create_dataset():
     entrees = lire_entrees()
     x = [e.train_data() for e in entrees]
-    y = [e.value_data() for e in entrees]
+    y = [e.value_data_yolo() for e in entrees]
     x_train, y_train, x_validation, y_validation, x_test, y_test = split_dataset(x, y)
     x_train = np.array(x_train)
     y_train = np.array(y_train)

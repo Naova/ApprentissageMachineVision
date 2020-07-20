@@ -3,3 +3,5 @@ dataset/
 .vscode/
 launch.json
 *.csv
+*.h5
+*.json
