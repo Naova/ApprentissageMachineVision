@@ -1,6 +1,7 @@
 import numpy as np
 from pathlib import Path
 import json
+import utils
 
 import sys
 sys.path.insert(0,'..')
@@ -12,41 +13,25 @@ def normaliser_image(image):
 class Entree:
     def __init__(self, nom, labels, image):
         self.nom = nom
-        self.robots = [label for label in labels if label['categorie'] == 2]
+        #self.robots = [label for label in labels if label['categorie'] == 2]
         self.balles = [label for label in labels if label['categorie'] == 1]
         self.image = normaliser_image(image)
     def train_data(self):
         return self.image
     def value_data_yolo(self):
-        value = np.zeros((cfg.yolo_height, cfg.yolo_width, 5 + cfg.nb_categories))
+        value = np.zeros((cfg.yolo_height, cfg.yolo_width, 4))
         for balle in self.balles:
             width = balle['right'] - balle['left']
             height = balle['bottom'] - balle['top']
-            x = balle['left'] + width / 2
-            y = balle['top'] + height / 2
+            x = balle['left'] + width / 2 #centre geometrique de la boite
+            y = balle['top'] + height / 2 #centre geometrique de la boite
             center_x = int(x / cfg.image_width * cfg.yolo_width)
             center_y = int(y / cfg.image_height * cfg.yolo_height)
             center = (center_y, center_x)
-            value[center][0] = x / cfg.image_width * cfg.yolo_width - center_x          #center_x
-            value[center][1] = y / cfg.image_height * cfg.yolo_height - center_y        #center_y
-            value[center][2] = width / cfg.image_width                                  #width
-            value[center][3] = height / cfg.image_height                                #height
-            value[center][4] = 1                                                        #objet present
-            value[center][5] = 1                                                        #classe balle
-        for robot in self.robots:
-            width = robot['right'] - robot['left']
-            height = robot['bottom'] - robot['top']
-            x = robot['left'] + width / 2
-            y = robot['top'] + height / 2
-            center_x = int(x / cfg.image_width * cfg.yolo_width)
-            center_y = int(y / cfg.image_height * cfg.yolo_height)
-            center = (center_y, center_x)
-            value[center][0] = x / cfg.image_width * cfg.yolo_width - center_x          #center_x
-            value[center][1] = y / cfg.image_height * cfg.yolo_height - center_y        #center_y
-            value[center][2] = width / cfg.image_width                                  #width
-            value[center][3] = height / cfg.image_height                                #height
-            value[center][4] = 1                                                        #objet present
-            value[center][6] = 1                                                        #classe robot
+            value[center][0] = 1                                                     #presence d'objet
+            value[center][1] = x / cfg.image_width * cfg.yolo_width - center_x       #center_x
+            value[center][2] = y / cfg.image_height * cfg.yolo_height - center_y     #center_y
+            value[center][3] = max(width / cfg.image_width, height / cfg.image_height) / 2  #rayon
         return value
 
 def lire_entrees():
