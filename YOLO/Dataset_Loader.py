@@ -10,6 +10,10 @@ import config as cfg
 def normaliser_image(image):
     return image/255
 
+def best_anchor(anchors, rayon):
+    distances = [abs(a - rayon) for a in anchors]
+    return distances.index(min(distances))
+
 class Entree:
     def __init__(self, nom, labels, image):
         self.nom = nom
@@ -19,7 +23,8 @@ class Entree:
     def train_data(self):
         return self.image
     def value_data_yolo(self):
-        value = np.zeros((cfg.yolo_height, cfg.yolo_width, 4))
+        anchors = cfg.get_anchors()
+        value = np.zeros((cfg.yolo_height, cfg.yolo_width, 3 + len(anchors)))
         for balle in self.balles:
             width = balle['right'] - balle['left']
             height = balle['bottom'] - balle['top']
@@ -31,7 +36,11 @@ class Entree:
             value[center][0] = 1                                                     #presence d'objet
             value[center][1] = x / cfg.image_width * cfg.yolo_width - center_x       #center_x
             value[center][2] = y / cfg.image_height * cfg.yolo_height - center_y     #center_y
-            value[center][3] = max(width / cfg.image_width, height / cfg.image_height) / 2  #rayon
+            rayon = max(width, height) / cfg.image_width / 2
+            
+            best_anchor_index = best_anchor(anchors, rayon)
+            value[center][3 + best_anchor_index] = 1                                 #rayon anchor
+
         return value
 
 def lire_entrees():

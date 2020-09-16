@@ -14,7 +14,9 @@ def draw_rectangle_on_image(input_image, yolo_output, coords):
     for i, obj in enumerate(yolo_output[coords]):
         center_x = (coords[1][i] + obj[1]) * ratio_x
         center_y = (coords[0][i] + obj[2]) * ratio_y
-        rayon = obj[3] * cfg.image_width
+        anchor_index = np.where(obj[3:]==obj[3:].max())[0][0]
+        anchors = cfg.get_anchors()
+        rayon = anchors[anchor_index] * cfg.image_width
         left = int(center_x - rayon)
         top = int(center_y - rayon)
         right = int(center_x + rayon)

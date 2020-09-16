@@ -1,3 +1,4 @@
+import json
 
 #chemins d'acces vers le dataset
 dossier_brut = 'D:\\_Ecole\\Naova\\Vision\\Dataset_Brut\\'
@@ -10,16 +11,23 @@ image_height = 320
 image_width = 240
 
 #resolution de l'output du modele. Doit concorder avec le modele lui-meme. (voir la derniere couche du summary)
-yolo_height = 17
-yolo_width = 12
+yolo_height = 14
+yolo_width = 9
 
-#set la sortie du modele
-yolo_categories = {
-    1:'balle',
-    2:'robot'
-}
-nb_categories = len(yolo_categories)
+yolo_nb_anchors = 6
 
-retrain = True
-model_path = 'yolo_modele.h5'
+__yolo_anchors = [] #rayon de la balle en pourcentage de la largeur de l'image
+yolo_anchors_path = 'anchors.json'
+
+def get_anchors():
+    global __yolo_anchors
+    if __yolo_anchors:
+        return __yolo_anchors
+    else:
+        with open(yolo_anchors_path, 'r') as anchors_file:
+            __yolo_anchors = json.loads(anchors_file.read())
+        return __yolo_anchors
+
+retrain = False
+model_path_keras = 'yolo_modele.h5'
 model_path_fdeep = 'yolo_modele.json'
