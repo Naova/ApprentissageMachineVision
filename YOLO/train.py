@@ -165,10 +165,10 @@ def train():
         modele = create_model(shape, cfg.yolo_nb_anchors)
         modele.summary()
         modele = train_model(modele, x_train, y_train, x_validation, y_validation)
+        modele.save(cfg.model_path_keras, include_optimizer=False)
     else:
         modele = keras.models.load_model(cfg.model_path_keras, custom_objects={'custom_loss': custom_loss, 'custom_accuracy':custom_accuracy})
-
-    modele.save(cfg.model_path_keras, include_optimizer=False)
+    
     for i in range(len(x_test)):
         v = [[val for val in x_val] for x_val in x_test[i]]
         start = process_time()
@@ -176,8 +176,6 @@ def train():
         stop = process_time()
         print('temps execution : ', stop - start)
         generate_prediction_image(prediction, x_test[i], y_test[i], i)
-
-    #modele.save(cfg.model_path_keras, include_optimizer=False)
 
     sys.argv = ['', cfg.model_path_keras, cfg.model_path_fdeep]
 

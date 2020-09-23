@@ -23,26 +23,28 @@ Il y a quelques endroits utiles pour changer des paramètres (au besoin):
 
 ### Étape 2
 
-Du dépôt git 'ApprentissageMachineVision', exécuter le script `brut_to_png.py`. Ce script génèrera les images PNG à partir des données provenant du Nao. Ça n'est techniquement pas obligatoire, mais peut aider au déboguage.
+Du dépôt git 'ApprentissageMachineVision', exécuter le script `brut_to_png.py`. Ce script génèrera les images PNG à partir des données provenant du Nao. Ça n'est techniquement pas obligatoire, mais permet de visualiser les données.
 
 `etiquetage.py`, qui lance le programme pour étiqueter les images.
 
 Tous ces script utilisent le fichier `config.py` pour connaître les chemins vers les dossiers. À modifier pour vos chemins d'accès.
 
-### Étape 3.
+### Étape 3
 
 Une fois que le programme d'étiquetage est lancé, une fenêtre apparaît à l'écran avec une image provenant de la caméra du nao.
 
-Si l'image ne contient pas de balle : appuyer sur le clic droit de la souris. La fenêtre passera à l'image suivante.
+Si l'image ne contient pas de balle : passer à l'image suivante en appuyant sur la touche 'd'.
 
-Si l'image contient une balle : faire un clic gauche de la souris sur le centre de la balle, puis faire un clic gauche de la souris sur le bord de la balle. Cela permet de calculer à la fois sa position et son rayon.
+Si l'image contient une balle : faire un clic gauche de la souris sur un coin de la balle, puis glisser la souris jusqu'au coin opposé, puis relâcher le bouton. Cela permet de calculer à la fois la position et le rayon de la balle. Passer à l'image suivante en appuyant sur la touche 'd'.
 
 Pour revenir en arrière d'une image, appuyer sur la touche 'a'.
 
-À tout moment, il est possible de sauvegarder la progression en appuyant sur la touche 's'. Si on ferme le programme et qu'on le rouvre, on reviendra au dernier point sauvegardé. La sauvegarde se fait toute seule lorsqu'on étiquette la dernière image du dataset, mais pas quand on ferme la fenêtre manuellement.
+La progression est sauvegardée à chaque changement d'image. Faire un retour en arrière efface l'étiquette pour l'image précédente.
 
-Il est aussi possible de sauter une image en appuyant sur la touche 'd'. Le fichier restera présent sur le disque mais ne sera pas utilisé lors de l'entraînement.
+### Étape 4
 
-### Étape 4.
+Lancer le script `clustering.py`. Cela créera un fichier `anchors.json` basé sur les étiquettes du dataset pour sélectionner les rayons de balles optimaux.
 
-Lancer le script `train.py`. Cela utilisera les fichiers étiquetés pour performer un entraînement d'un réseau de neurones et l'exportera dans un fichier HDF.
+### Étape 5
+
+Lancer le script `train.py`. Cela utilisera les fichiers étiquetés et les ancres générées précédemment pour performer un entraînement d'un modèle et le sauvegardera dans un fichier HDF, puis le convertira en json, au format lisible par Frugally Deep, la librairie utilisée par les NAOs pour exécuter les réseaux de neurones.

@@ -2,7 +2,6 @@ from tkinter import *
 from pathlib import Path
 from PIL import Image, ImageTk
 import matplotlib.pyplot as plt
-from skimage.draw import polygon
 import math
 import numpy as np
 import json
@@ -56,11 +55,6 @@ entree_courante = None
 index_courant = -1
 images = []
 categorie_courante = None
-current_tool = 'rectangle'
-current_polygon = ([], [])
-
-input_directory = cfg.dossier_brut
-output_directory = cfg.dossier_etiquettes
 
 current_click = None
 
@@ -79,7 +73,7 @@ def afficher_prochaine_image():
 def set_categorie(categorie:int):
     global categorie_courante
     categorie_courante = categorie
-    print(str(categorie) + ' : ' + cfg.yolo_categories[categorie] + ' selectionne')
+    print('categorie ' + str(categorie) + ' selectionnee')
 
 def key_pressed_callback(event):
     try:
@@ -103,7 +97,7 @@ def mouse_pressed_callback(event):
 
 def mouse_released_callback(event):
     print('released')
-    global current_click, current_tool
+    global current_click
     left = current_click.x_init
     top = current_click.y_init
     current_click = None
@@ -126,28 +120,15 @@ def mouse_released_callback(event):
     if right >= cfg.image_width:
         right = cfg.image_width - 1
     #dessine un rectange. A modifier pour une strategie de dessin (ajouter d'autres formes)
-    if current_tool == 'rectangle':
-        entree_courante.label[top:bottom, left:right, :] = 0.0
-        entree_courante.label[top:bottom, left:right, categorie_courante] = 1.0
-        entree_courante.append_label(left, right, top, bottom, categorie_courante)
-        canvas.create_rectangle(left, top, right, bottom)
-    if current_tool == 'polygon':
-        current_polygon[0].append(event.y)
-        current_polygon[1].append(event.x)
+    entree_courante.label[top:bottom, left:right, :] = 0.0
+    entree_courante.label[top:bottom, left:right, categorie_courante] = 1.0
+    entree_courante.append_label(left, right, top, bottom, categorie_courante)
+    canvas.create_rectangle(left, top, right, bottom)
 
 
 def mouse_move(event):
     if current_click is not None:
         pass
-
-def change_tool(event=None):
-    global current_tool, current_polygon
-    if current_tool == 'rectangle':
-        current_tool = 'polygon'
-        current_polygon = ([], [])
-    elif current_tool == 'polygon':
-        current_tool = 'rectangle'
-    print('switch to ' + current_tool)
 
 def display_label(event=None):
     plt.imshow(entree_courante.label[:,:,categorie_courante])
@@ -163,16 +144,8 @@ def next_image(event=None):
     entree_courante = None
     afficher_prochaine_image()
 
-def confirm_polygon(event=None):
-    global current_polygon
-    rr, cc = polygon(current_polygon[0], current_polygon[1])
-    current_polygon = ([], [])
-    entree_courante.label[rr, cc] = 0.0
-    entree_courante.label[rr, cc, categorie_courante] = 1.0
-
 #sauvegarde le label courant
 def save_label(event=None):
-    np.save(cfg.dossier_etiquettes + entree_courante.label_nom, entree_courante.label)
     previous_labels = {}
     try:
         with open(cfg.json_etiquettes) as input_file:
@@ -198,7 +171,6 @@ def helpe(event=None):
     'h', help
     'a', previous_image
     '<Number>', set categorie
-    '<Button-3>', change tool
 
     #dessin
     '<ButtonPress>', commence a dessiner
@@ -222,11 +194,9 @@ canvas.bind('<Key>', key_pressed_callback)
 canvas.bind('a', previous_image)
 canvas.bind('<ButtonPress-1>', mouse_pressed_callback)
 canvas.bind('<ButtonRelease-1>', mouse_released_callback)
-canvas.bind('<Button-3>', change_tool)
 canvas.bind('w', display_label)
 canvas.bind('d', next_image)
 canvas.bind('s', save_label)
-canvas.bind('e', confirm_polygon)
 canvas.bind('x', delete_current_labels)
 canvas.bind('h', helpe)
 canvas.bind('p', pause)
@@ -238,10 +208,12 @@ def main():
 
     set_categorie(1)
 
-    dossier_images = Path(input_directory).glob('**/*')
+    dossier_images = Path(cfg.dossier_brut).glob('**/*')
     #charge le fichier s'il est deja rempli
     fichiers_deja_etiquetes = []
-    etiquettes = [str(p).split('\\')[-1].split('.')[0][:-6] for p in Path(cfg.dossier_etiquettes).glob('**/*')]
+    with open(cfg.json_etiquettes, 'r') as f:
+        etiquettes = json.load(f)
+        etiquettes = list(etiquettes.keys())
     
     images_paths = [x for x in dossier_images if x.is_file() and str(x).split('\\')[-1] not in etiquettes]
     images = get_actual_images(images_paths)

@@ -4,7 +4,6 @@ import json
 dossier_brut = 'D:\\_Ecole\\Naova\\Vision\\Dataset_Brut\\'
 dossier_PNG = 'D:\\_Ecole\\Naova\\Vision\\Dataset_PNG\\'
 json_etiquettes = 'D:\\_Ecole\\Naova\\Vision\\images_balles_positions.json'
-#dossier_etiquettes = 'D:\\_Ecole\\Naova\\Vision\\Dataset_Etiquettes\\'
 
 #resolution de l'image d'entree (elle est retournee a 90 degres)
 image_height = 320
