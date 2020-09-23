@@ -5,3 +5,4 @@ launch.json
 *.csv
 *.h5
 *.json
+*.png

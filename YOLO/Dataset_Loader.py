@@ -55,7 +55,7 @@ def lire_entrees():
     return entrees
 
 def split_dataset(x, y):
-    ratio_train = 0.88
+    ratio_train = 0.89
     ratio_validation = 0.1
     ratio_test = 1.0 - (ratio_train + ratio_validation)
 

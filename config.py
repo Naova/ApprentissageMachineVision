@@ -28,6 +28,6 @@ def get_anchors():
             __yolo_anchors = json.loads(anchors_file.read())
         return __yolo_anchors
 
-retrain = False
+retrain = True
 model_path_keras = 'yolo_modele.h5'
 model_path_fdeep = 'yolo_modele.json'
