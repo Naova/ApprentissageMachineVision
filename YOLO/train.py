@@ -97,31 +97,26 @@ def add_conv_2d(x, n_filters=16, kernel=kernel(3), stride=stride(1), batch_norma
 
 def create_model(shape:tuple, nb_anchors:int):
     inputs = keras.layers.Input(shape=shape)
-    x = add_conv_2d(inputs, 64, kernel(5), stride(2), True, True)
+    x = add_conv_2d(inputs, 32, kernel(5), stride(2), True, True)
+    x = MaxPool2D(stride(2))(x)
+    
+    x = add_conv_2d(x, 32, kernel(3), stride(1), True, True)
+    x = add_conv_2d(x, 64, kernel(3), stride(1), True, True)
+    x = MaxPool2D(stride(2))(x)
+    
+    x = add_conv_2d(x, 32, kernel(3), stride(1), True, True)
+    x = add_conv_2d(x, 64, kernel(3), stride(1), True, True)
     x = MaxPool2D(stride(2))(x)
     
     x = add_conv_2d(x, 64, kernel(3), stride(1), True, True)
-    x = add_conv_2d(x, 32, kernel(1), stride(1), True, True)
-    x = add_conv_2d(x, 64, kernel(3), stride(1), True, True)
-    x = MaxPool2D(stride(2))(x)
-    
-    x = add_conv_2d(x, 96, kernel(3), stride(1), True, True)
-    x = add_conv_2d(x, 64, kernel(1), stride(1), True, True)
-    x = add_conv_2d(x, 96, kernel(3), stride(1), True, True)
-    x = MaxPool2D(stride(2))(x)
-    
-    x = add_conv_2d(x, 128, kernel(3), stride(1), True, True)
-    x = add_conv_2d(x, 96, kernel(1), stride(1), True, True)
-    x = Conv2D(3, kernel(1), activation='sigmoid')(x)
-    y = Conv2D(nb_anchors, kernel(1), activation='softmax')(x)
-    x = concatenate([x, y])
+    x = Conv2D(3 + nb_anchors, kernel(1), activation='sigmoid')(x)
     return keras.models.Model(inputs, x)
 
 def train_model(modele, x_train, y_train, x_validation, y_validation):
     modele.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
               loss=custom_loss,
               metrics=[custom_accuracy, 'binary_crossentropy'])
-    es = keras.callbacks.EarlyStopping(monitor='val_loss', patience=4, restore_best_weights=True)
+    es = keras.callbacks.EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
     modele.fit(x_train, y_train, batch_size=5, epochs=20, validation_data=(x_validation, y_validation), callbacks=[es])
     return modele
 

@@ -6,12 +6,12 @@ dossier_PNG = 'D:\\_Ecole\\Naova\\Vision\\Dataset_PNG\\'
 json_etiquettes = 'D:\\_Ecole\\Naova\\Vision\\images_balles_positions.json'
 
 #resolution de l'image d'entree (elle est retournee a 90 degres)
-image_height = 320
-image_width = 240
+image_height = 240
+image_width = 320
 
 #resolution de l'output du modele. Doit concorder avec le modele lui-meme. (voir la derniere couche du summary)
-yolo_height = 14
-yolo_width = 9
+yolo_height = 9
+yolo_width = 14
 
 yolo_nb_anchors = 6
 
