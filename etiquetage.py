@@ -43,9 +43,9 @@ class ClickInfo:
 def get_actual_images(fichiers):
     images = []
     for fichier_image in fichiers:
-        f = np.fromfile(str(fichier_image), dtype=np.int32)
+        f = np.fromfile(str(fichier_image), dtype=np.float32)
         f = np.reshape(f, (cfg.image_height,cfg.image_width,3))
-        image = Image.fromarray(f.astype('uint8'))
+        image = Image.fromarray((f*255).astype('uint8'))
         #image = Image.open(str(fichier_image))
         images.append((str(fichier_image).split('\\')[-1], ImageTk.PhotoImage(image=image)))
     return images

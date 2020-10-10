@@ -7,9 +7,6 @@ import sys
 sys.path.insert(0,'..')
 import config as cfg
 
-def normaliser_image(image):
-    return image/255
-
 def best_anchor(anchors, rayon):
     distances = [abs(a - rayon) for a in anchors]
     return distances.index(min(distances))
@@ -19,7 +16,7 @@ class Entree:
         self.nom = nom
         #self.robots = [label for label in labels if label['categorie'] == 2]
         self.balles = [label for label in labels if label['categorie'] == 1]
-        self.image = normaliser_image(image)
+        self.image = image
     def train_data(self):
         return self.image
     def value_data_yolo(self):
@@ -49,7 +46,7 @@ def lire_entrees():
         labels = json.loads(fichier.read())
         for image_label in labels:
             fichier_image = cfg.dossier_brut + image_label
-            image = np.fromfile(fichier_image, dtype=np.int32)
+            image = np.fromfile(fichier_image, dtype=np.float32)
             image = np.reshape(image, (cfg.image_height, cfg.image_width, 3))
             entrees.append(Entree(image_label, labels[image_label], image))
     return entrees
