@@ -2,7 +2,7 @@ from Dataset_Loader import create_dataset
 
 import tensorflow as tf
 import tensorflow.keras as keras
-from tensorflow.keras.layers import Conv2D, MaxPool2D, Dense, Dropout, Flatten, BatchNormalization, LeakyReLU, UpSampling2D, concatenate
+from tensorflow.keras.layers import Conv2D, MaxPool2D, Dense, Dropout, Flatten, BatchNormalization, LeakyReLU, UpSampling2D, concatenate, SeparableConv2D
 import tensorflow.keras.backend as K
 
 import matplotlib.pyplot as plt
@@ -87,8 +87,8 @@ def stride(x):
 def kernel(x):
     return (x, x)
 
-def add_conv_2d(x, n_filters=16, kernel=kernel(3), stride=stride(1), batch_normalization=False, leaky_relu=False, kernel_initializer='he_uniform'):
-    x = Conv2D(n_filters, kernel, stride)(x)
+def add_conv_2d(x, n_filters=16, kernel=kernel(3), stride=stride(1), batch_normalization=False, leaky_relu=False, ConvType=Conv2D):
+    x = ConvType(n_filters, kernel, stride)(x)
     if leaky_relu:
         x = LeakyReLU(alpha=0.1)(x)
     if batch_normalization:
@@ -97,18 +97,18 @@ def add_conv_2d(x, n_filters=16, kernel=kernel(3), stride=stride(1), batch_norma
 
 def create_model(shape:tuple, nb_anchors:int):
     inputs = keras.layers.Input(shape=shape)
-    x = add_conv_2d(inputs, 32, kernel(5), stride(2), True, True)
+    x = add_conv_2d(inputs, 64, kernel(5), stride(2), True, True)
     x = MaxPool2D(stride(2))(x)
     
-    x = add_conv_2d(x, 32, kernel(3), stride(1), True, True)
-    x = add_conv_2d(x, 64, kernel(3), stride(1), True, True)
+    x = add_conv_2d(x, 48, kernel(3), stride(1), True, True, SeparableConv2D)
+    x = add_conv_2d(x, 32, kernel(3), stride(1), True, True, SeparableConv2D)
     x = MaxPool2D(stride(2))(x)
     
-    x = add_conv_2d(x, 32, kernel(3), stride(1), True, True)
-    x = add_conv_2d(x, 64, kernel(3), stride(1), True, True)
+    x = add_conv_2d(x, 64, kernel(3), stride(1), True, True, SeparableConv2D)
+    x = add_conv_2d(x, 48, kernel(3), stride(1), True, True, SeparableConv2D)
     x = MaxPool2D(stride(2))(x)
     
-    x = add_conv_2d(x, 64, kernel(3), stride(1), True, True)
+    x = add_conv_2d(x, 64, kernel(3), stride(1), True, True, SeparableConv2D)
     x = Conv2D(3 + nb_anchors, kernel(1), activation='sigmoid')(x)
     return keras.models.Model(inputs, x)
 
@@ -116,7 +116,7 @@ def train_model(modele, x_train, y_train, x_validation, y_validation):
     modele.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
               loss=custom_loss,
               metrics=[custom_accuracy, 'binary_crossentropy'])
-    es = keras.callbacks.EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
+    es = keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
     modele.fit(x_train, y_train, batch_size=5, epochs=20, validation_data=(x_validation, y_validation), callbacks=[es])
     return modele
 
@@ -141,7 +141,7 @@ def display_model_prediction(prediction, wanted_prediction, prediction_on_image,
     figManager = plt.get_current_fig_manager()
     figManager.window.showMaximized()
     if save_to_file_name:
-        plt.savefig(save_to_file_name, dpi=300)
+        plt.savefig('predictions\\' + save_to_file_name, dpi=300)
     plt.show()
 
 def generate_prediction_image(prediction, x_test, y_test, prediction_number = None):
