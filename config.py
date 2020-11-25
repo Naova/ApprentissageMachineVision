@@ -2,6 +2,7 @@ import json
 
 #chemins d'acces vers le dataset
 dossier_brut = 'D:\\_Ecole\\Naova\\Vision\\Dataset_Brut\\'
+dossier_brut_tempo = 'D:\\_Ecole\\Naova\\NaovaCode\\Dataset\\'
 dossier_PNG = 'D:\\_Ecole\\Naova\\Vision\\Dataset_PNG\\'
 json_etiquettes = 'D:\\_Ecole\\Naova\\Vision\\images_balles_positions.json'
 
