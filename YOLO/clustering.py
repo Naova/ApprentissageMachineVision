@@ -51,6 +51,11 @@ def kmean(population, k = 10):
 if __name__ == '__main__':
     rayons = read_rayons(cfg.json_etiquettes)
     anchors = kmean(rayons, cfg.yolo_nb_anchors)
+    rayons.sort()
+    with open('rayons.csv', 'w') as f:
+        for rayon in rayons:
+            s = str(rayon)
+            f.write(s.replace('.', ',') + '\n')
     print(anchors)
     with open(cfg.yolo_anchors_path, 'w') as anchors_file:
         anchors_file.write(json.dumps(anchors))

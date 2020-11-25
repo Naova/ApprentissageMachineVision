@@ -22,15 +22,12 @@ import config as cfg
 def custom_accuracy(y_true, y_pred):
     return K.mean(K.equal(y_true[:,:,:,0], K.round(y_pred[:,:,:,0])))
 
-def custom_loss(y_true, y_pred):
+def custom_loss(y_true, y_pred, lambda_1 = 5, lambda_2 = 0.45):
     obj_mask  = y_true[:,:,:,0]
     mask_shape = tf.shape(obj_mask)
     noobj_mask = tf.ones(mask_shape) - obj_mask
 
     anchors = tf.constant(cfg.get_anchors())
-
-    lambda_1 = 10
-    lambda_2 = 0.4
 
     #position
     true_center_x = y_true[:,:,:,1]
@@ -112,12 +109,12 @@ def create_model(shape:tuple, nb_anchors:int):
     x = Conv2D(3 + nb_anchors, kernel(1), activation='sigmoid')(x)
     return keras.models.Model(inputs, x)
 
-def train_model(modele, x_train, y_train, x_validation, y_validation):
-    modele.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001),
+def train_model(modele, train_generator, validation_generator):
+    modele.compile(optimizer=keras.optimizers.Adam(),
               loss=custom_loss,
               metrics=[custom_accuracy, 'binary_crossentropy'])
     es = keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
-    modele.fit(x_train, y_train, batch_size=5, epochs=20, validation_data=(x_validation, y_validation), callbacks=[es])
+    modele.fit(train_generator, validation_data=validation_generator, epochs=20, callbacks=[es])
     return modele
 
 def display_model_prediction(prediction, wanted_prediction, prediction_on_image, wanted_output, save_to_file_name = None):
@@ -154,23 +151,23 @@ def generate_prediction_image(prediction, x_test, y_test, prediction_number = No
     display_model_prediction(prediction[:,:,0], y_test[:,:,0], prediction_on_image, wanted_output, 'prediction_' + str(prediction_number) + '.png')
 
 def train():
-    x_train, y_train, x_validation, y_validation, x_test, y_test = create_dataset()
+    train_generator, validation_generator, test_generator = create_dataset(1)
     shape = (cfg.image_height, cfg.image_width, 3)
     if cfg.retrain:
         modele = create_model(shape, cfg.yolo_nb_anchors)
         modele.summary()
-        modele = train_model(modele, x_train, y_train, x_validation, y_validation)
+        modele = train_model(modele, train_generator, validation_generator)
         modele.save(cfg.model_path_keras, include_optimizer=False)
     else:
         modele = keras.models.load_model(cfg.model_path_keras, custom_objects={'custom_loss': custom_loss, 'custom_accuracy':custom_accuracy})
     
-    for i in range(len(x_test)):
-        v = [[val for val in x_val] for x_val in x_test[i]]
+    for i, entree in enumerate(test_generator):
+        entree_x = entree.x()
         start = process_time()
-        prediction = modele.predict([[v]])[0]
+        prediction = modele.predict(np.array([entree_x]))[0]
         stop = process_time()
-        print('temps execution : ', stop - start)
-        generate_prediction_image(prediction, x_test[i], y_test[i], i)
+        print(entree.nom + ' : ', stop - start)
+        generate_prediction_image(prediction, entree_x, entree.y(), i)
 
     sys.argv = ['', cfg.model_path_keras, cfg.model_path_fdeep]
 
