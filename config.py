@@ -1,10 +1,10 @@
 import json
 
 #chemins d'acces vers le dataset
-dossier_brut = 'D:\\_Ecole\\Naova\\Vision\\Dataset_Brut\\'
-dossier_brut_tempo = 'D:\\_Ecole\\Naova\\NaovaCode\\Dataset\\'
-dossier_PNG = 'D:\\_Ecole\\Naova\\Vision\\Dataset_PNG\\'
-json_etiquettes = 'D:\\_Ecole\\Naova\\Vision\\images_balles_positions.json'
+dossier_brut_tempo = '../Dataset/Brut_Robot_tempo/'
+dossier_brut = '../Dataset/Brut_Robot/images/'
+dossier_PNG = '../Dataset/PNG_Robot/'
+json_etiquettes = '../Dataset/Brut_Simulation/images_balles_positions.json'
 
 #resolution de l'image d'entree (elle est retournee a 90 degres)
 image_height = 240
@@ -28,6 +28,7 @@ def get_anchors():
             __yolo_anchors = json.loads(anchors_file.read())
         return __yolo_anchors
 
+flipper_images = True
 retrain = True
 model_path_keras = 'yolo_modele.h5'
 model_path_fdeep = 'yolo_modele.json'

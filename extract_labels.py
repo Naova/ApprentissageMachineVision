@@ -39,7 +39,7 @@ def main():
             position['top'] = top
             position['bottom'] = bottom
             position['categorie'] = 1
-            d[fichier.split('\\')[-1]] = [position]
+            d[fichier.split('/')[-1]] = [position]
     with open(cfg.json_etiquettes) as fichier:
         labels = json.loads(fichier.read())
     for im in d:
@@ -47,6 +47,6 @@ def main():
     with open(cfg.json_etiquettes, 'w') as fichier:
         json.dump(labels, fichier)
     for i in images:
-        shutil.copy(i, dossier_sortie + i.split('\\')[-1])
+        shutil.copy(i, dossier_sortie + i.split('/')[-1])
 if __name__ == '__main__':
     main()

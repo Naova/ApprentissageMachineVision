@@ -22,7 +22,7 @@ import config as cfg
 def custom_accuracy(y_true, y_pred):
     return K.mean(K.equal(y_true[:,:,:,0], K.round(y_pred[:,:,:,0])))
 
-def custom_loss(y_true, y_pred, lambda_1 = 5, lambda_2 = 0.45):
+def custom_loss(y_true, y_pred, lambda_1 = 5, lambda_2 = 0.5):
     obj_mask  = y_true[:,:,:,0]
     mask_shape = tf.shape(obj_mask)
     noobj_mask = tf.ones(mask_shape) - obj_mask
@@ -94,18 +94,18 @@ def add_conv_2d(x, n_filters=16, kernel=kernel(3), stride=stride(1), batch_norma
 
 def create_model(shape:tuple, nb_anchors:int):
     inputs = keras.layers.Input(shape=shape)
-    x = add_conv_2d(inputs, 64, kernel(5), stride(2), True, True)
-    x = MaxPool2D(stride(2))(x)
-    
-    x = add_conv_2d(x, 48, kernel(3), stride(1), True, True, SeparableConv2D)
-    x = add_conv_2d(x, 32, kernel(3), stride(1), True, True, SeparableConv2D)
+    x = add_conv_2d(inputs, 128, kernel(5), stride(2), True, True, Conv2D)
     x = MaxPool2D(stride(2))(x)
     
     x = add_conv_2d(x, 64, kernel(3), stride(1), True, True, SeparableConv2D)
     x = add_conv_2d(x, 48, kernel(3), stride(1), True, True, SeparableConv2D)
     x = MaxPool2D(stride(2))(x)
     
+    x = add_conv_2d(x, 128, kernel(3), stride(1), True, True, SeparableConv2D)
     x = add_conv_2d(x, 64, kernel(3), stride(1), True, True, SeparableConv2D)
+    x = MaxPool2D(stride(2))(x)
+    
+    x = add_conv_2d(x, 128, kernel(3), stride(1), True, True, SeparableConv2D)
     x = Conv2D(3 + nb_anchors, kernel(1), activation='sigmoid')(x)
     return keras.models.Model(inputs, x)
 
@@ -113,7 +113,7 @@ def train_model(modele, train_generator, validation_generator):
     modele.compile(optimizer=keras.optimizers.Adam(),
               loss=custom_loss,
               metrics=[custom_accuracy, 'binary_crossentropy'])
-    es = keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+    es = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=2, restore_best_weights=True)
     modele.fit(train_generator, validation_data=validation_generator, epochs=20, callbacks=[es])
     return modele
 
@@ -138,7 +138,7 @@ def display_model_prediction(prediction, wanted_prediction, prediction_on_image,
     figManager = plt.get_current_fig_manager()
     figManager.window.showMaximized()
     if save_to_file_name:
-        plt.savefig('predictions\\' + save_to_file_name, dpi=300)
+        plt.savefig('predictions/' + save_to_file_name, dpi=300)
     plt.show()
 
 def generate_prediction_image(prediction, x_test, y_test, prediction_number = None):
@@ -151,7 +151,7 @@ def generate_prediction_image(prediction, x_test, y_test, prediction_number = No
     display_model_prediction(prediction[:,:,0], y_test[:,:,0], prediction_on_image, wanted_output, 'prediction_' + str(prediction_number) + '.png')
 
 def train():
-    train_generator, validation_generator, test_generator = create_dataset(1)
+    train_generator, validation_generator, test_generator = create_dataset(16)
     shape = (cfg.image_height, cfg.image_width, 3)
     if cfg.retrain:
         modele = create_model(shape, cfg.yolo_nb_anchors)

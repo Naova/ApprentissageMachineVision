@@ -14,14 +14,17 @@ def best_anchor(anchors, rayon):
     return distances.index(min(distances))
 
 class Entree:
-    def __init__(self, nom, labels, image_path):
+    def __init__(self, nom:str, labels:dict, image_path:str, flipper:bool):
         self.nom = nom
         #self.robots = [label for label in labels if label['categorie'] == 2]
         self.balles = [label for label in labels if label['categorie'] == 1]
         self.image_path = image_path
+        self.flipper = flipper
     def x(self):
         image = np.fromfile(self.image_path, dtype=np.float32)
         image = np.reshape(image, (cfg.image_height, cfg.image_width, 3))
+        if self.flipper:
+            return np.fliplr(image)
         return image
     def y(self):
         anchors = cfg.get_anchors()
@@ -29,7 +32,10 @@ class Entree:
         for balle in self.balles:
             width = balle['right'] - balle['left']
             height = balle['bottom'] - balle['top']
-            x = balle['left'] + width / 2 #centre geometrique de la boite
+            if self.flipper:
+                x = cfg.image_width - balle['right'] + width / 2 #centre geometrique de la boite
+            else:
+                x = balle['left'] + width / 2 #centre geometrique de la boite
             y = balle['top'] + height / 2 #centre geometrique de la boite
             center_x = int(x / cfg.image_width * cfg.yolo_width)
             center_y = int(y / cfg.image_height * cfg.yolo_height)
@@ -47,25 +53,27 @@ class Entree:
 
 def lire_entrees():
     entrees = []
-    with open(cfg.json_etiquettes) as fichier:
+    with open('../'+cfg.json_etiquettes) as fichier:
         labels = json.loads(fichier.read())
         for image_label in labels:
-            fichier_image = cfg.dossier_brut + image_label
-            entrees.append(Entree(image_label, labels[image_label], fichier_image))
+            fichier_image = '../' + cfg.dossier_brut + image_label
+            if cfg.flipper_images:
+                entrees.append(Entree(image_label, labels[image_label], fichier_image, True))
+            entrees.append(Entree(image_label, labels[image_label], fichier_image, False))
     return entrees
 
 def split_dataset(entrees, batch_size=16):
     random.shuffle(entrees)
-    ratio_train = 0.9
-    ratio_validation = 0.09
+    ratio_train = 0.9 #90%
+    ratio_test = 20 / len(entrees) #nombre fixe, pas besoin de plus
+    #ratio_validation = 10% - 20
 
-    i = int(len(entrees) * ratio_train)
-    j = int(len(entrees) * (ratio_train + ratio_validation))
-    k = int(len(entrees) - i - j)
+    i = int(len(entrees) * ratio_train)#train
+    j = int(len(entrees) * (ratio_train + ratio_test))#test
 
     train = KerasSequence(entrees[:i], batch_size, Entree.x, Entree.y)
-    validation = KerasSequence(entrees[i:j], batch_size, Entree.x, Entree.y)
-    test = entrees[j:]
+    validation = KerasSequence(entrees[j:], batch_size, Entree.x, Entree.y)
+    test = entrees[i:j]
 
     return train, validation, test
 
