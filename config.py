@@ -1,10 +1,18 @@
 import json
 
-#chemins d'acces vers le dataset
-dossier_brut_tempo = '../Dataset/Brut_Robot_tempo/'
-dossier_brut = '../Dataset/Brut_Robot/images/'
-dossier_PNG = '../Dataset/PNG_Robot/'
-json_etiquettes = '../Dataset/Brut_Simulation/images_balles_positions.json'
+#chemins d'acces vers le dataset (robot)
+dataset_robot_root = 'Dataset/Robot/'
+dossier_brut_robot = dataset_robot_root + 'Brut/'
+dossier_PNG_robot = dataset_robot_root + 'PNG/'
+dossier_tempo_robot = dataset_robot_root + 'tempo/'
+labels_robot = dataset_robot_root + 'labels.json'
+
+#chemins d'acces vers le dataset (simulation)
+dataset_simulation_root = 'Dataset/Simulation/'
+dossier_brut_simulation = dataset_simulation_root + 'Brut/'
+dossier_PNG_simulation = dataset_simulation_root + 'PNG/'
+dossier_tempo_simulation = dataset_simulation_root + 'tempo/'
+labels_simulation = dataset_simulation_root + 'labels.json'
 
 #resolution de l'image d'entree (elle est retournee a 90 degres)
 image_height = 240

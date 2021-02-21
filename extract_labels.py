@@ -9,9 +9,8 @@ import config as cfg
 import os.path
 import shutil
 
-def main():
-    dossier_entree = Path(cfg.dossier_brut_tempo).glob('**/*')
-    dossier_sortie = cfg.dossier_brut
+def extract_labels(path_entree:str, path_sortie:str, etiquette_path:str):
+    dossier_entree = Path(path_entree).glob('**/*')
     fichiers = [str(x) for x in dossier_entree if x.is_file() and 'gitignore' not in str(x)]
     images = [f for f in fichiers if 'label' not in f]
     labels = [f for f in fichiers if 'label' in f]
@@ -40,13 +39,18 @@ def main():
             position['bottom'] = bottom
             position['categorie'] = 1
             d[fichier.split('/')[-1]] = [position]
-    with open(cfg.json_etiquettes) as fichier:
+    with open(etiquette_path) as fichier:
         labels = json.loads(fichier.read())
     for im in d:
         labels[im] = d[im]
-    with open(cfg.json_etiquettes, 'w') as fichier:
+    with open(etiquette_path, 'w') as fichier:
         json.dump(labels, fichier)
     for i in images:
-        shutil.copy(i, dossier_sortie + i.split('/')[-1])
+        shutil.copy(i, path_sortie + i.split('/')[-1])
+
+def main():
+    extract_labels(cfg.dossier_tempo_simulation, cfg.dossier_brut_simulation, cfg.labels_simulation)
+    extract_labels(cfg.dossier_tempo_robot, cfg.dossier_brut_robot, cfg.labels_robot)
+    
 if __name__ == '__main__':
     main()

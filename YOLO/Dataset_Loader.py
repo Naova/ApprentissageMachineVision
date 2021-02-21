@@ -51,12 +51,12 @@ class Entree:
 
         return value
 
-def lire_entrees():
+def lire_entrees(labels_path:str, brut_path:str):
     entrees = []
-    with open('../'+cfg.json_etiquettes) as fichier:
+    with open(labels_path) as fichier:
         labels = json.loads(fichier.read())
         for image_label in labels:
-            fichier_image = '../' + cfg.dossier_brut + image_label
+            fichier_image = brut_path + image_label
             if cfg.flipper_images:
                 entrees.append(Entree(image_label, labels[image_label], fichier_image, True))
             entrees.append(Entree(image_label, labels[image_label], fichier_image, False))
@@ -78,6 +78,6 @@ def split_dataset(entrees, batch_size=16):
     return train, validation, test
 
 def create_dataset(batch_size):
-    entrees = lire_entrees()
+    entrees = lire_entrees('../'+cfg.labels_simulation, '../'+cfg.dossier_brut_simulation)
     train, validation, test = split_dataset(entrees, batch_size)
     return train, validation, test
