@@ -11,7 +11,7 @@ def cleanup(path_entree:str):
     fichiers = [str(x) for x in dossier_entree if 'label' not in str(x)]
     for fichier in tqdm(fichiers):
         f = np.fromfile(fichier, dtype=np.float32)
-        if len(f) < 230400:
+        if len(f) < cfg.image_height*cfg.image_width*3:
             print(fichier)
             #breakpoint()
             os.remove(fichier)
