@@ -16,4 +16,4 @@ class KerasSequence(keras.utils.Sequence):
         batch_x = [self.x_function(entry) for entry in self.entries[idx * self.batch_size : (idx+1) * self.batch_size]]
         batch_y = [self.y_function(entry) for entry in self.entries[idx * self.batch_size : (idx+1) * self.batch_size]]
         
-        return np.array(batch_x), np.array(batch_y), [None]
+        return np.array(batch_x), np.array(batch_y)

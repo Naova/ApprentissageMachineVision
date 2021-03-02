@@ -19,9 +19,11 @@ import sys
 sys.path.insert(0,'..')
 import config as cfg
 
+@tf.autograph.experimental.do_not_convert
 def custom_accuracy(y_true, y_pred):
     return K.mean(K.equal(y_true[:,:,:,0], K.round(y_pred[:,:,:,0])))
 
+@tf.autograph.experimental.do_not_convert
 def custom_loss(y_true, y_pred, lambda_1 = 5, lambda_2 = 0.5):
     obj_mask  = y_true[:,:,:,0]
     mask_shape = tf.shape(obj_mask)
