@@ -9,6 +9,7 @@ def brut_2_png(path_entree:str, path_sortie:str):
     dossier_entree = Path(path_entree).glob('batch_*')
     fichiers = [str(x) for x in dossier_entree if 'label' not in str(x)]
     for fichier in tqdm(fichiers):
+        fichier = fichier.replace('\\', '/')
         new_path_sortie = path_sortie + fichier.split('/')[-1] + ".png"
         if not os.path.isfile(new_path_sortie):
             f = np.fromfile(fichier, dtype=np.float32)
