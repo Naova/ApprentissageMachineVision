@@ -19,11 +19,9 @@ import sys
 sys.path.insert(0,'..')
 import config as cfg
 
-@tf.autograph.experimental.do_not_convert
 def custom_accuracy(y_true, y_pred):
     return K.mean(K.equal(y_true[:,:,:,0], K.round(y_pred[:,:,:,0])))
 
-@tf.autograph.experimental.do_not_convert
 def custom_loss(y_true, y_pred, lambda_1 = 5, lambda_2 = 0.5):
     obj_mask  = y_true[:,:,:,0]
     mask_shape = tf.shape(obj_mask)
@@ -90,24 +88,24 @@ def add_conv_2d(x, n_filters=16, kernel=kernel(3), stride=stride(1), batch_norma
     x = ConvType(n_filters, kernel, stride)(x)
     if leaky_relu:
         x = LeakyReLU(alpha=0.1)(x)
-    #if batch_normalization:
-    #    x = BatchNormalization()(x)
+    if batch_normalization:
+        x = BatchNormalization()(x)
     return x
 
 def create_model(shape:tuple, nb_anchors:int):
     inputs = keras.layers.Input(shape=shape)
-    x = add_conv_2d(inputs, 64, kernel(5), stride(2), True, True, Conv2D)
+    x = add_conv_2d(inputs, 128, kernel(5), stride(2), True, True, Conv2D)
     x = MaxPool2D(stride(2))(x)
     
-    x = add_conv_2d(x, 48, kernel(3), stride(1), True, True, Conv2D)
-    x = add_conv_2d(x, 32, kernel(3), stride(1), True, True, Conv2D)
+    x = add_conv_2d(x, 64, kernel(3), stride(1), True, True, SeparableConv2D)
+    x = add_conv_2d(x, 48, kernel(3), stride(1), True, True, SeparableConv2D)
     x = MaxPool2D(stride(2))(x)
     
-    x = add_conv_2d(x, 48, kernel(3), stride(1), True, True, Conv2D)
-    x = add_conv_2d(x, 32, kernel(3), stride(1), True, True, Conv2D)
+    x = add_conv_2d(x, 128, kernel(3), stride(1), True, True, SeparableConv2D)
+    x = add_conv_2d(x, 64, kernel(3), stride(1), True, True, SeparableConv2D)
     x = MaxPool2D(stride(2))(x)
     
-    x = add_conv_2d(x, 48, kernel(3), stride(1), True, True, Conv2D)
+    x = add_conv_2d(x, 128, kernel(3), stride(1), True, True, SeparableConv2D)
     x = Conv2D(3 + nb_anchors, kernel(1), activation='sigmoid')(x)
     return keras.models.Model(inputs, x)
 
@@ -169,7 +167,7 @@ def train():
         prediction = modele.predict(np.array([entree_x]))[0]
         stop = process_time()
         print(entree.nom + ' : ', stop - start)
-        #generate_prediction_image(prediction, entree_x, entree.y(), i)
+        generate_prediction_image(prediction, entree_x, entree.y(), i)
 
     sys.argv = ['', cfg.model_path_keras, cfg.model_path_fdeep]
 
