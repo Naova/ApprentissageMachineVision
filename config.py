@@ -22,7 +22,7 @@ image_width = 320
 yolo_height = 9
 yolo_width = 14
 
-yolo_nb_anchors = 6
+yolo_nb_anchors = 4
 
 __yolo_anchors = [] #rayon de la balle en pourcentage de la largeur de l'image
 yolo_anchors_path = 'anchors.json'
@@ -37,6 +37,6 @@ def get_anchors():
         return __yolo_anchors
 
 flipper_images = True
-retrain = True
+retrain = False
 model_path_keras = 'yolo_modele.h5'
 model_path_fdeep = 'yolo_modele.json'

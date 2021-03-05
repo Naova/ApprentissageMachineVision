@@ -49,7 +49,7 @@ def kmean(population, k = 10):
     return sorted(clusters)
 
 if __name__ == '__main__':
-    rayons = read_rayons(cfg.json_etiquettes)
+    rayons = read_rayons('../' + cfg.labels_simulation)
     anchors = kmean(rayons, cfg.yolo_nb_anchors)
     rayons.sort()
     with open('rayons.csv', 'w') as f:

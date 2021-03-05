@@ -19,66 +19,6 @@ import sys
 sys.path.insert(0,'..')
 import config as cfg
 
-def custom_accuracy(y_true, y_pred):
-    return K.mean(K.equal(y_true[:,:,:,0], K.round(y_pred[:,:,:,0])))
-
-def custom_loss(y_true, y_pred, lambda_1 = 5, lambda_2 = 0.5):
-    obj_mask  = y_true[:,:,:,0]
-    mask_shape = tf.shape(obj_mask)
-    noobj_mask = tf.ones(mask_shape) - obj_mask
-
-    anchors = tf.constant(cfg.get_anchors())
-
-    #position
-    true_center_x = y_true[:,:,:,1]
-    true_center_y = y_true[:,:,:,2]
-
-    pred_center_x = y_pred[:,:,:,1]
-    pred_center_y = y_pred[:,:,:,2]
-
-    #get rayons
-    anchor_index_true = K.argmax(y_true[:,:,:,3:])
-    true_rayons = K.gather(anchors, anchor_index_true)
-
-    anchor_index_pred = K.argmax(y_pred[:,:,:,3:])
-    pred_rayons = K.gather(anchors, anchor_index_pred)
-
-    #boxes
-    scale = cfg.image_width / cfg.yolo_width
-    true_left = true_center_x - true_rayons * scale
-    true_right = true_center_x + true_rayons * scale
-    true_top = true_center_y - true_rayons * scale
-    true_bottom = true_center_y + true_rayons * scale
-
-    pred_left = pred_center_x - pred_rayons * scale
-    pred_right = pred_center_x + pred_rayons * scale
-    pred_top = pred_center_y - pred_rayons * scale
-    pred_bottom = pred_center_y + pred_rayons * scale
-
-    #intersection
-    i_left = K.maximum(true_left, pred_left)
-    i_top = K.maximum(true_top, pred_top)
-    i_right = K.minimum(true_right, pred_right)
-    i_bottom = K.minimum(true_bottom, pred_bottom)
-
-    intersection_area = (i_right - i_left) * (i_bottom - i_top)
-
-    #areas
-    true_area = (true_right - true_left) * (true_bottom - true_top)
-    pred_area = (pred_right - pred_left) * (pred_bottom - pred_top)
-
-    #union
-    union_area = true_area + pred_area - intersection_area
-
-    #iou
-    iou = intersection_area / union_area
-    iou_loss = (1 - iou) * obj_mask * lambda_1
-
-    #confidence
-    confidence_loss = K.square(y_true[:,:,:,0] - y_pred[:,:,:,0]) * obj_mask \
-                      + K.square(y_true[:,:,:,0] - y_pred[:,:,:,0]) * noobj_mask * lambda_2
-    return iou_loss + confidence_loss
-
 def stride(x):
     return (x, x)
 def kernel(x):
@@ -111,10 +51,10 @@ def create_model(shape:tuple, nb_anchors:int):
 
 def train_model(modele, train_generator, validation_generator):
     modele.compile(optimizer=keras.optimizers.Adam(),
-              loss=custom_loss,
-              metrics=[custom_accuracy, 'binary_crossentropy'])
-    es = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=2, restore_best_weights=True)
-    modele.fit(train_generator, validation_data=validation_generator, epochs=1, callbacks=[es])
+              loss='binary_crossentropy')
+              #metrics=['binary_crossentropy'])
+    es = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=1, restore_best_weights=True)
+    modele.fit(train_generator, validation_data=validation_generator, epochs=5, callbacks=[es])
     return modele
 
 def display_model_prediction(prediction, wanted_prediction, prediction_on_image, wanted_output, save_to_file_name = None):
@@ -142,9 +82,7 @@ def display_model_prediction(prediction, wanted_prediction, prediction_on_image,
     plt.show()
 
 def generate_prediction_image(prediction, x_test, y_test, prediction_number = None):
-    ratio_x = cfg.image_width / cfg.yolo_width
-    ratio_y = cfg.image_height / cfg.yolo_height
-    coords = utils.n_max_coord(prediction[:,:,0], 3)
+    coords = utils.n_max_coord(prediction[:,:,0], 1)
     prediction_on_image = utils.draw_rectangle_on_image(x_test.copy(), prediction, coords)
     coords = utils.treshold_coord(y_test[:,:,0])
     wanted_output = utils.draw_rectangle_on_image(x_test.copy(), y_test, coords)
@@ -159,7 +97,7 @@ def train():
         modele = train_model(modele, train_generator, validation_generator)
         modele.save(cfg.model_path_keras, include_optimizer=False)
     else:
-        modele = keras.models.load_model(cfg.model_path_keras, custom_objects={'custom_loss': custom_loss, 'custom_accuracy':custom_accuracy})
+        modele = keras.models.load_model(cfg.model_path_keras)
     
     for i, entree in enumerate(test_generator):
         entree_x = entree.x()

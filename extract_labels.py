@@ -21,6 +21,8 @@ def extract_labels(path_entree:str, path_sortie:str, etiquette_path:str):
     d = {}
 
     for fichier, label in tqdm(zip(images, labels)):
+        fichier = fichier.replace('\\', '/')
+        label = label.replace('\\', '/')
         if '.gitignore' not in fichier:
             f = np.fromfile(fichier, dtype=np.float32)
             f = np.reshape(f, (cfg.image_height,cfg.image_width,3))
@@ -46,6 +48,7 @@ def extract_labels(path_entree:str, path_sortie:str, etiquette_path:str):
     with open(etiquette_path, 'w') as fichier:
         json.dump(labels, fichier)
     for i in images:
+        i = i.replace('\\', '/')
         shutil.copy(i, path_sortie + i.split('/')[-1])
 
 def main():
