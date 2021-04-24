@@ -25,6 +25,16 @@ def draw_rectangle_on_image(input_image, yolo_output, coords):
         input_image[rect] = 1
     return input_image
 
+def ycbcr2rgb(img_ycbcr:np.array):
+    #convertion en RGB
+    img = img_ycbcr*255
+    xform = np.array([[1, 0, 1.402], [1, -0.34414, -.71414], [1, 1.772, 0]])
+    img[:,:,[1,2]] -= 128
+    img = img.dot(xform.T)
+    np.putmask(img, img > 255, 255)
+    np.putmask(img, img < 0, 0)
+    return img/255
+
 def treshold_coord(arr, treshold = 0.5):
     return np.where(arr >= treshold)
 

@@ -1,7 +1,7 @@
-h5py==2.8.0
-matplotlib==3.1.3
-numpy==1.18.1
-Pillow==7.0.0
+h5py
+matplotlib
+numpy
+Pillow
 tensorboard==2.1.0
 tensorflow==2.1.0
-tqdm==4.46.0
+tqdm

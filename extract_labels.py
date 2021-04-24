@@ -53,7 +53,7 @@ def extract_labels(path_entree:str, path_sortie:str, etiquette_path:str):
 
 def main():
     extract_labels(cfg.dossier_tempo_simulation, cfg.dossier_brut_simulation, cfg.labels_simulation)
-    extract_labels(cfg.dossier_tempo_robot, cfg.dossier_brut_robot, cfg.labels_robot)
+    #extract_labels(cfg.dossier_tempo_robot, cfg.dossier_brut_robot, cfg.labels_robot)
     
 if __name__ == '__main__':
     main()

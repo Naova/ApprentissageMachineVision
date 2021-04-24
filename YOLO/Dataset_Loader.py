@@ -64,7 +64,7 @@ def lire_entrees(labels_path:str, brut_path:str):
 
 def split_dataset(entrees, batch_size=16):
     random.shuffle(entrees)
-    ratio_train = 0.9 #90%
+    ratio_train = 0.95 #90%
     ratio_test = 20 / len(entrees) #nombre fixe, pas besoin de plus
     #ratio_validation = 10% - 20
 

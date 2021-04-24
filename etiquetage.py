@@ -193,8 +193,7 @@ def pause(event=None):
     breakpoint()
 
 def delete_image(event=None):
-    global entree_courante
-    global label_courant
+    global entree_courante, label_courant, index_courant
     os.remove(cfg.dossier_brut_simulation + entree_courante.image_nom)
     previous_labels = {}
     try:
@@ -209,6 +208,7 @@ def delete_image(event=None):
     print('image and label deleted : ' + entree_courante.label_nom)
     label_courant = None
     entree_courante = None
+    index_courant -= 1
     afficher_prochaine_image()
     
 
@@ -241,7 +241,7 @@ def main():
         etiquettes = list(etiquettes.keys())
     
     if mode == 'verification':
-        images_paths = [x for x in dossier_images if x.is_file()]
+        images_paths = [x for x in dossier_images if x.is_file() and 'batch_10' in str(x)]
     else:
         images_paths = [x for x in dossier_images if x.is_file() and str(x).split('\\')[-1] not in etiquettes]
     images = get_actual_images(images_paths)
