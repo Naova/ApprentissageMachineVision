@@ -43,6 +43,6 @@ def get_anchors():
         return __yolo_anchors
 
 flipper_images = True
-retrain = False
+retrain = True
 model_path_keras = 'yolo_modele.h5'
 model_path_fdeep = 'yolo_modele.json'

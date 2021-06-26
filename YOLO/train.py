@@ -32,11 +32,11 @@ def add_conv_2d(x, n_filters=16, kernel=kernel(3), stride=stride(1), ConvType=Co
 def create_model(shape:tuple, nb_anchors:int):
     inputs = keras.layers.Input(shape=shape)
     x = add_conv_2d(inputs, 96, kernel(5), stride(2), Conv2D)
-    x = MaxPool2D(stride(2))(x)
+    x = AveragePooling2D(stride(2))(x)
     
     x = add_conv_2d(x, 64, kernel(3), stride(1), SeparableConv2D)
     x = add_conv_2d(x, 48, kernel(3), stride(1), SeparableConv2D)
-    x = MaxPool2D(stride(2))(x)
+    x = AveragePooling2D(stride(2))(x)
     
     x = add_conv_2d(x, 128, kernel(3), stride(1), SeparableConv2D)
     x = add_conv_2d(x, 64, kernel(3), stride(1), SeparableConv2D)

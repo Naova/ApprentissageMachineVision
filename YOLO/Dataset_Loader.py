@@ -81,3 +81,4 @@ def create_dataset(batch_size):
     entrees = lire_entrees('../'+cfg.labels_simulation, '../'+cfg.dossier_brut_simulation)
     train, validation, test = split_dataset(entrees, batch_size)
     return train, validation, test
+    
