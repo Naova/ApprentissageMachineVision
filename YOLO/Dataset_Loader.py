@@ -4,6 +4,8 @@ import json
 import utils
 import random
 
+from PIL import Image
+
 import sys
 sys.path.insert(0,'..')
 import config as cfg
@@ -23,6 +25,10 @@ class Entree:
     def x(self):
         image = np.fromfile(self.image_path, dtype=np.float32)
         image = np.reshape(image, (cfg.image_height, cfg.image_width, 3))
+        if cfg.resized_image_height != cfg.image_height or cfg.resized_image_width != cfg.image_width:
+            img = Image.fromarray((image*255).astype(np.uint8))
+            img = img.resize((cfg.resized_image_width, cfg.resized_image_height))
+            image = np.array(img) / 255.
         if self.flipper:
             return np.fliplr(image)
         return image
@@ -77,8 +83,8 @@ def split_dataset(entrees, batch_size=16):
 
     return train, validation, test
 
-def create_dataset(batch_size):
-    entrees = lire_entrees('../'+cfg.labels_simulation, '../'+cfg.dossier_brut_simulation)
+def create_dataset(batch_size, labels_path:str, images_path:str):
+    entrees = lire_entrees(labels_path, images_path)
     train, validation, test = split_dataset(entrees, batch_size)
     return train, validation, test
     

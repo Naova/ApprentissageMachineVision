@@ -39,7 +39,7 @@ class ClickInfo:
 
 #retourne une liste de PIL.Image a partir d'une liste de chemins d'acces
 def get_actual_images(fichiers):
-    with open(cfg.labels_simulation, 'r') as f:
+    with open(cfg.labels_robot, 'r') as f:
         etiquettes = json.load(f)
     images = []
     for fichier_image in fichiers:
@@ -55,7 +55,8 @@ entree_courante = None
 index_courant = -1
 images = []
 categorie_courante = None
-mode = 'verification' #ou 'etiquetage'
+#mode = 'verification' #ou 'etiquetage'
+mode = 'etiquetage'
 
 current_click = None
 
@@ -155,11 +156,11 @@ def next_image(event=None):
 def save_label(event=None):
     previous_labels = {}
     try:
-        with open(cfg.labels_simulation) as input_file:
+        with open(cfg.labels_robot) as input_file:
             previous_labels = json.loads(input_file.read())
     except:
         breakpoint()
-    with open(cfg.labels_simulation, 'w') as output_file:
+    with open(cfg.labels_robot, 'w') as output_file:
         previous_labels[entree_courante.image_nom] = entree_courante.as_json_dict()
         output_file.write(json.dumps(previous_labels))
     print('label saved : ' + entree_courante.label_nom)
@@ -194,15 +195,15 @@ def pause(event=None):
 
 def delete_image(event=None):
     global entree_courante, label_courant, index_courant
-    os.remove(cfg.dossier_brut_simulation + entree_courante.image_nom)
+    os.remove(cfg.dossier_brut_robot + entree_courante.image_nom)
     previous_labels = {}
     try:
-        with open(cfg.labels_simulation) as input_file:
+        with open(cfg.labels_robot) as input_file:
             previous_labels = json.loads(input_file.read())
     except:
         breakpoint()
     if entree_courante.image_nom in previous_labels:
-        with open(cfg.labels_simulation, 'w') as output_file:
+        with open(cfg.labels_robot, 'w') as output_file:
             del previous_labels[entree_courante.image_nom]
             output_file.write(json.dumps(previous_labels))
     print('image and label deleted : ' + entree_courante.label_nom)
@@ -234,9 +235,9 @@ def main():
 
     set_categorie(1)
 
-    dossier_images = Path(cfg.dossier_brut_simulation).glob('**/*')
+    dossier_images = Path(cfg.dossier_brut_robot).glob('**/*')
     #charge le fichier s'il est deja rempli
-    with open(cfg.labels_simulation, 'r') as f:
+    with open(cfg.labels_robot, 'r') as f:
         etiquettes = json.load(f)
         etiquettes = list(etiquettes.keys())
     

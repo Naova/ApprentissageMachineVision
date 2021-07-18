@@ -24,6 +24,9 @@ labels_simulation = dataset_simulation_root + 'labels.json'
 image_height = 240
 image_width = 320
 
+resized_image_height = 120
+resized_image_width = 160
+
 #resolution de l'output du modele. Doit concorder avec le modele lui-meme. (voir la derniere couche du summary)
 yolo_height = 12
 yolo_width = 17
@@ -44,5 +47,5 @@ def get_anchors():
 
 flipper_images = True
 retrain = True
-model_path_keras = 'yolo_modele.h5'
-model_path_fdeep = 'yolo_modele.json'
+model_path_simulation = 'yolo_modele_simulation_nb.h5'
+model_path_robot = 'yolo_modele_robot_nb.h5'

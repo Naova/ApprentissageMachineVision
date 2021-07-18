@@ -25,10 +25,10 @@ def brut_2_png(path_entree:str, path_sortie:str, convert_to_rgb:bool):
             image.save(new_path_sortie, "png")
 
 def main():
-    print("De " + cfg.dossier_brut_simulation + " vers " + cfg.dossier_PNG_simulation)
-    brut_2_png(cfg.dossier_brut_simulation, cfg.dossier_PNG_simulation, True)
-    print("De " + cfg.dossier_brut_robot + " vers " + cfg.dossier_PNG_robot)
-    brut_2_png(cfg.dossier_brut_robot, cfg.dossier_PNG_robot, True)
+    #print("De " + cfg.dossier_brut_simulation + " vers " + cfg.dossier_PNG_simulation)
+    #brut_2_png(cfg.dossier_brut_simulation, cfg.dossier_PNG_simulation, True)
+    #print("De " + cfg.dossier_brut_robot + " vers " + cfg.dossier_PNG_robot)
+    #brut_2_png(cfg.dossier_brut_robot, cfg.dossier_PNG_robot, True)
     print("De " + cfg.dossier_brut_genere + " vers " + cfg.dossier_PNG_genere)
     brut_2_png(cfg.dossier_brut_genere, cfg.dossier_PNG_genere, True)
 
