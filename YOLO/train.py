@@ -2,7 +2,7 @@ from Dataset_Loader import create_dataset
 
 import tensorflow as tf
 import tensorflow.keras as keras
-from tensorflow.keras.layers import Conv2D, MaxPool2D, Dense, Dropout, Flatten, LeakyReLU, UpSampling2D, concatenate, SeparableConv2D, AveragePooling2D
+from tensorflow.keras.layers import Conv2D, MaxPool2D, Dense, LeakyReLU, SeparableConv2D
 import tensorflow.keras.backend as K
 
 import matplotlib.pyplot as plt
@@ -28,18 +28,12 @@ def add_conv_2d(x, n_filters=16, kernel=kernel(3), stride=stride(1), ConvType=Co
 
 def create_model(shape:tuple, nb_anchors:int):
     inputs = keras.layers.Input(shape=shape)
-    x = add_conv_2d(inputs, 96, kernel(5), stride(2), Conv2D)
-    x = AveragePooling2D(stride(2))(x)
+    x = add_conv_2d(inputs, 64, kernel(5), stride(2), Conv2D)
     
     x = add_conv_2d(x, 64, kernel(3), stride(1), SeparableConv2D)
-    x = add_conv_2d(x, 48, kernel(3), stride(1), SeparableConv2D)
-    #x = AveragePooling2D(stride(2))(x)
-    
-    #x = add_conv_2d(x, 128, kernel(3), stride(1), SeparableConv2D)
-    #x = add_conv_2d(x, 64, kernel(3), stride(1), SeparableConv2D)
+    x = add_conv_2d(x, 64, kernel(3), stride(1), SeparableConv2D)
     x = MaxPool2D(stride(2))(x)
-    
-    #x = AveragePooling2D(padding='same')(x)
+
     x = Dense(64)(x)
     x = LeakyReLU()(x)
     x = Conv2D(3 + nb_anchors, kernel(1), activation='sigmoid')(x)
@@ -47,7 +41,7 @@ def create_model(shape:tuple, nb_anchors:int):
 
 def train_model(modele, train_generator, validation_generator):
     modele.compile(optimizer=keras.optimizers.Adam(), loss='binary_crossentropy')
-    es = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=2, restore_best_weights=True)
+    es = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=2, restore_best_weights=True)
     modele.fit(train_generator, validation_data=validation_generator, epochs=40, callbacks=[es])
     return modele
 

@@ -54,7 +54,7 @@ def test_model_on_dataset(modele_simulation, modele_robot, dataset):
         losses_simulation.append(modele_simulation.evaluate(np.array([entree_x]), np.array([entree_y]), verbose=0))
         prediction_simulation = modele_simulation.predict(np.array([entree_x]))[0]
         losses_robot.append(modele_robot.evaluate(np.array([entree_x]), np.array([entree_y]), verbose=0))
-        print('\n')
+        print('\n' + entree.image_path)
         print(losses_simulation)
         print(losses_robot)
         prediction_robot = modele_robot.predict(np.array([entree_x]))[0]

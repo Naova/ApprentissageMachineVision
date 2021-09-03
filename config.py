@@ -28,8 +28,8 @@ resized_image_height = 120
 resized_image_width = 160
 
 #resolution de l'output du modele. Doit concorder avec le modele lui-meme. (voir la derniere couche du summary)
-yolo_height = 12
-yolo_width = 17
+yolo_height = 27
+yolo_width = 37
 
 yolo_nb_anchors = 5
 
@@ -46,6 +46,6 @@ def get_anchors():
         return __yolo_anchors
 
 flipper_images = True
-retrain = True
-model_path_simulation = 'yolo_modele_simulation_nb.h5'
-model_path_robot = 'yolo_modele_robot_nb.h5'
+retrain = False
+model_path_simulation = 'yolo_modele_simulation.h5'
+model_path_robot = 'yolo_modele_robot.h5'

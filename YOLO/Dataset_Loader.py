@@ -27,7 +27,7 @@ class Entree:
         image = np.reshape(image, (cfg.image_height, cfg.image_width, 3))
         if cfg.resized_image_height != cfg.image_height or cfg.resized_image_width != cfg.image_width:
             img = Image.fromarray((image*255).astype(np.uint8))
-            img = img.resize((cfg.resized_image_width, cfg.resized_image_height))
+            img = img.resize((cfg.resized_image_width, cfg.resized_image_height), Image.NEAREST)
             image = np.array(img) / 255.
         if self.flipper:
             return np.fliplr(image)
