@@ -28,8 +28,8 @@ resized_image_height = 120
 resized_image_width = 160
 
 #resolution de l'output du modele. Doit concorder avec le modele lui-meme. (voir la derniere couche du summary)
-yolo_height = 27
-yolo_width = 37
+yolo_height = 25
+yolo_width = 35
 
 yolo_nb_anchors = 5
 
