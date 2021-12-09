@@ -1,41 +1,40 @@
-from Dataset_Loader import create_dataset
-
 import tensorflow as tf
 import tensorflow.keras as keras
 from tensorflow.keras.layers import Conv2D, MaxPool2D, Dense, LeakyReLU, SeparableConv2D
 import tensorflow.keras.backend as K
 
 import matplotlib.pyplot as plt
-import random
 import numpy as np
-
 from time import process_time
-import utils
 
 import sys
 sys.path.insert(0,'..')
+
+
 import config as cfg
+from Dataset_Loader import create_dataset
+import utils
+
 
 def kernel(x):
     return (x, x)
 
 def add_conv_2d(x, n_filters=16, kernel=kernel(3), stride=kernel(1), ConvType=Conv2D):
-    x = ConvType(n_filters, kernel, stride)(x)
-    x = LeakyReLU()(x)
+    x = ConvType(n_filters, kernel, stride, activation=LeakyReLU())(x)
     return x
 
 def create_model(shape:tuple, nb_anchors:int):
     inputs = keras.layers.Input(shape=shape)
-    x = add_conv_2d(inputs, 64, kernel(5), kernel(2), Conv2D)
-    
-    x = add_conv_2d(x, 64, kernel(5), kernel(1), SeparableConv2D)
-    x = add_conv_2d(x, 64, kernel(3), kernel(1), SeparableConv2D)
-    x = add_conv_2d(x, 64, kernel(3), kernel(1), SeparableConv2D)
-    x = MaxPool2D(kernel(2))(x)
-
-    x = Dense(64)(x)
+    x = SeparableConv2D(48, kernel(5), kernel(2))(inputs)
     x = LeakyReLU()(x)
-    x = Conv2D(3 + nb_anchors, kernel(1), activation='sigmoid')(x)
+    
+    x = SeparableConv2D(48, kernel(3), kernel(1))(x)
+    x = LeakyReLU()(x)
+    x = MaxPool2D()(x)
+    x = Dense(32)(x)
+    x = LeakyReLU()(x)
+
+    x = Conv2D(3 + nb_anchors, kernel(1), kernel(1), activation='sigmoid')(x)
     return keras.models.Model(inputs, x)
 
 def train_model(modele, train_generator, validation_generator):
@@ -74,9 +73,10 @@ def generate_prediction_image(prediction, x_test, y_test, prediction_number = No
     display_model_prediction(prediction[:,:,0], y_test[:,:,0], prediction_on_image, wanted_output, 'prediction_' + str(prediction_number) + '.png')
 
 def train(train_generator, validation_generator, test_generator, modele_path, test=True):
-    shape = (cfg.resized_image_height, cfg.resized_image_width, 3)
+    resized_image_height, resized_image_width = cfg.get_resized_image_resolution()
+    shape = (resized_image_height, resized_image_width, 3)
     if cfg.retrain:
-        modele = create_model(shape, cfg.yolo_nb_anchors)
+        modele = create_model(shape, cfg.get_nb_anchors())
         modele.summary()
         modele = train_model(modele, train_generator, validation_generator)
         modele.save(modele_path, include_optimizer=False)
@@ -95,8 +95,9 @@ def train(train_generator, validation_generator, test_generator, modele_path, te
 
 if __name__ == '__main__':
     #simulation
-    #train_generator, validation_generator, test_generator = create_dataset(16, '../'+cfg.labels_simulation, '../'+cfg.dossier_brut_simulation)
-    #train(train_generator, validation_generator, test_generator, cfg.model_path_simulation, True)
-    #images generees
-    train_generator, validation_generator, test_generator = create_dataset(16, '../'+cfg.labels_simulation, '../'+cfg.dossier_brut_genere)
-    train(train_generator, validation_generator, test_generator, cfg.model_path_robot, True)
+    env = 'Simulation'
+    labels = cfg.get_labels_path(env)
+    dossier_brut = cfg.get_dossier(env, 'Brut')
+    modele_path = cfg.get_modele_path(env)
+    train_generator, validation_generator, test_generator = create_dataset(16, '../'+labels, '../'+dossier_brut)
+    train(train_generator, validation_generator, test_generator, modele_path, True)

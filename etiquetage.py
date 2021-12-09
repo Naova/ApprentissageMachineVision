@@ -39,12 +39,14 @@ class ClickInfo:
 
 #retourne une liste de PIL.Image a partir d'une liste de chemins d'acces
 def get_actual_images(fichiers):
-    with open(cfg.labels_robot, 'r') as f:
+    labels = cfg.get_labels_path('Robot')
+    with open(labels, 'r') as f:
         etiquettes = json.load(f)
     images = []
+    image_height, image_width = cfg.get_image_resolution()
     for fichier_image in fichiers:
         f = np.fromfile(str(fichier_image), dtype=np.float32)
-        f = np.reshape(f, (cfg.image_height,cfg.image_width,3))
+        f = np.reshape(f, (image_height,image_width,3))
         image = Image.fromarray((f*255).astype('uint8'))
         image_nom = str(fichier_image).replace('\\', '/').split('/')[-1]
         images.append((image_nom, ImageTk.PhotoImage(image=image), etiquettes[image_nom] if image_nom in etiquettes else None))
@@ -112,6 +114,7 @@ def mouse_pressed_callback(event):
 def mouse_released_callback(event):
     print('released')
     global current_click
+    image_height, image_width = cfg.get_image_resolution()
     left = current_click.x_init
     top = current_click.y_init
     current_click = None
@@ -127,12 +130,12 @@ def mouse_released_callback(event):
         bottom = swap
     if top < 0:
         top = 0
-    if bottom >= cfg.image_height:
-        bottom = cfg.image_height - 1
+    if bottom >= image_height:
+        bottom = image_height - 1
     if left < 0:
         left = 0
-    if right >= cfg.image_width:
-        right = cfg.image_width - 1
+    if right >= image_width:
+        right = image_width - 1
     #dessine un rectange. A modifier pour une strategie de dessin (ajouter d'autres formes)
     entree_courante.append_label(left, right, top, bottom, categorie_courante)
     canvas.create_rectangle(left, top, right, bottom)
@@ -156,11 +159,12 @@ def next_image(event=None):
 def save_label(event=None):
     previous_labels = {}
     try:
-        with open(cfg.labels_robot) as input_file:
+        labels = cfg.get_labels_path('Robot')
+        with open(labels) as input_file:
             previous_labels = json.loads(input_file.read())
     except:
         breakpoint()
-    with open(cfg.labels_robot, 'w') as output_file:
+    with open(labels, 'w') as output_file:
         previous_labels[entree_courante.image_nom] = entree_courante.as_json_dict()
         output_file.write(json.dumps(previous_labels))
     print('label saved : ' + entree_courante.label_nom)
@@ -195,15 +199,17 @@ def pause(event=None):
 
 def delete_image(event=None):
     global entree_courante, label_courant, index_courant
-    os.remove(cfg.dossier_brut_robot + entree_courante.image_nom)
+    dossier = cfg.get_dossier('Robot', 'Brut')
+    labels_path = cfg.get_labels_path('Robot')
+    os.remove(dossier + entree_courante.image_nom)
     previous_labels = {}
     try:
-        with open(cfg.labels_robot) as input_file:
+        with open(labels_path) as input_file:
             previous_labels = json.loads(input_file.read())
     except:
         breakpoint()
     if entree_courante.image_nom in previous_labels:
-        with open(cfg.labels_robot, 'w') as output_file:
+        with open(labels_path, 'w') as output_file:
             del previous_labels[entree_courante.image_nom]
             output_file.write(json.dumps(previous_labels))
     print('image and label deleted : ' + entree_courante.label_nom)
@@ -214,7 +220,8 @@ def delete_image(event=None):
     
 
 window = Tk()
-canvas = Canvas(window, width = cfg.image_width, height = cfg.image_height)
+image_height, image_width = cfg.get_image_resolution()
+canvas = Canvas(window, width = image_width, height = image_height)
 canvas.focus_set()
 canvas.pack()
 canvas.bind('<Key>', key_pressed_callback)
@@ -235,9 +242,12 @@ def main():
 
     set_categorie(1)
 
-    dossier_images = Path(cfg.dossier_brut_robot).glob('**/*')
+    dossier = cfg.get_dossier('Robot', 'Brut')
+    labels_path = cfg.get_labels_path('Robot')
+
+    dossier_images = Path(dossier).glob('**/*')
     #charge le fichier s'il est deja rempli
-    with open(cfg.labels_robot, 'r') as f:
+    with open(labels_path, 'r') as f:
         etiquettes = json.load(f)
         etiquettes = list(etiquettes.keys())
     

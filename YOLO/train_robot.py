@@ -8,7 +8,9 @@ import config as cfg
 cfg.retrain = True
 
 def main():
-    train_generator, validation_generator, test_generator = create_dataset(16, '../'+cfg.labels_simulation, '../'+cfg.dossier_brut_genere)
+    labels = cfg.get_labels_path('Simulation')
+    dossier_brut = cfg.get_dossier('Genere', 'Brut')
+    train_generator, validation_generator, test_generator = create_dataset(16, '../'+labels, '../'+dossier_brut)
     train(train_generator, validation_generator, test_generator, cfg.model_path_robot)
 
 if __name__ == '__main__':

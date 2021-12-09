@@ -1,5 +1,4 @@
 import numpy as np
-from PIL import Image
 from pathlib import Path
 from tqdm import tqdm
 import config as cfg
@@ -12,22 +11,24 @@ def cleanup_brut(path_entree:str):
     fichiers = [str(x) for x in dossier_entree if 'label' not in str(x)]
     for fichier in tqdm(fichiers):
         f = np.fromfile(fichier, dtype=np.float32)
-        if len(f) < cfg.image_height*cfg.image_width*3:
+        height, width = cfg.get_image_resolution(cfg.camera)
+        if len(f) < height*width*3:
             print(fichier)
-            #breakpoint()
             os.remove(fichier)
 
-def cleanup_labels(path_entree:str):
+def cleanup_labels(path_entree:str, dossier:str):
     with open(path_entree) as input_file:
         labels = json.loads(input_file.read())
     for image_name in labels:
-        if not Path(cfg.dossier_brut_simulation + image_name).is_file():
+        if not Path(dossier + image_name).is_file():
             breakpoint()
 
 def main():
-    print(cfg.dossier_brut_robot)
-    cleanup_brut(cfg.dossier_brut_robot)
-    cleanup_labels(cfg.labels_simulation)
+    dossier = cfg.get_dossier('Robot')
+    print(dossier)
+    cleanup_brut(dossier)
+    labels = cfg.get_labels_path('Robot')
+    cleanup_labels(labels, dossier)
 
 if __name__ == '__main__':
     main()

@@ -7,6 +7,7 @@ import random
 from statistics import mean
 
 def read_rayons(path_etiquettes):
+    image_width, image_height = cfg.get_image_resolution()
     rayons = []
     with open(path_etiquettes, 'r') as fichier:
         labels = json.loads(fichier.read())
@@ -15,7 +16,7 @@ def read_rayons(path_etiquettes):
             for balle in balles:
                 width = balle['right'] - balle['left']
                 height = balle['bottom'] - balle['top']
-                rayons.append(max(width / cfg.image_width, height / cfg.image_height) / 2)
+                rayons.append(max(width / image_width, height / image_height) / 2)
     return rayons
 
 def distance(x1, x2):
@@ -49,13 +50,13 @@ def kmean(population, k = 10):
     return sorted(clusters)
 
 if __name__ == '__main__':
-    rayons = read_rayons('../' + cfg.labels_simulation)
-    anchors = kmean(rayons, cfg.yolo_nb_anchors)
+    rayons = read_rayons('../' + cfg.get_labels_path('Simulation'))
+    anchors = kmean(rayons, cfg.get_nb_anchors())
     rayons.sort()
     with open('rayons.csv', 'w') as f:
         for rayon in rayons:
             s = str(rayon)
             f.write(s.replace('.', ',') + '\n')
     print(anchors)
-    with open(cfg.yolo_anchors_path, 'w') as anchors_file:
+    with open(cfg.get_anchors_path(), 'w') as anchors_file:
         anchors_file.write(json.dumps(anchors))

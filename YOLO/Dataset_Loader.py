@@ -23,34 +23,38 @@ class Entree:
         self.image_path = image_path
         self.flipper = flipper
     def x(self):
+        image_height, image_width = cfg.get_image_resolution()
+        resized_image_height, resized_image_width = cfg.get_resized_image_resolution()
         image = np.fromfile(self.image_path, dtype=np.float32)
-        image = np.reshape(image, (cfg.image_height, cfg.image_width, 3))
-        if cfg.resized_image_height != cfg.image_height or cfg.resized_image_width != cfg.image_width:
+        image = np.reshape(image, (image_height, image_width, 3))
+        if resized_image_height != image_height or resized_image_width != image_width:
             img = Image.fromarray((image*255).astype(np.uint8))
-            img = img.resize((cfg.resized_image_width, cfg.resized_image_height), Image.NEAREST)
+            img = img.resize((resized_image_width, resized_image_height), Image.NEAREST)
             image = np.array(img) / 255.
         if self.flipper:
             return np.fliplr(image)
         return image
     def y(self):
+        image_height, image_width = cfg.get_image_resolution()
+        yolo_height, yolo_width = cfg.get_yolo_resolution()
         anchors = cfg.get_anchors()
-        value = np.zeros((cfg.yolo_height, cfg.yolo_width, 3 + len(anchors)))
+        value = np.zeros((yolo_height, yolo_width, 3 + len(anchors)))
         for balle in self.balles:
             width = balle['right'] - balle['left']
             height = balle['bottom'] - balle['top']
             if self.flipper:
-                x = cfg.image_width - balle['right'] + width / 2 #centre geometrique de la boite
+                x = image_width - balle['right'] + width / 2 #centre geometrique de la boite
             else:
                 x = balle['left'] + width / 2 #centre geometrique de la boite
             y = balle['top'] + height / 2 #centre geometrique de la boite
-            center_x = int(x / cfg.image_width * cfg.yolo_width)
-            center_y = int(y / cfg.image_height * cfg.yolo_height)
+            center_x = int(x / image_width * yolo_width)
+            center_y = int(y / image_height * yolo_height)
             center = (center_y, center_x)
 
             value[center][0] = 1                                                     #presence d'objet
-            value[center][1] = x / cfg.image_width * cfg.yolo_width - center_x       #center_x
-            value[center][2] = y / cfg.image_height * cfg.yolo_height - center_y     #center_y
-            rayon = max(width, height) / cfg.image_width / 2
+            value[center][1] = x / image_width * yolo_width - center_x       #center_x
+            value[center][2] = y / image_height * yolo_height - center_y     #center_y
+            rayon = max(width, height) / image_width / 2
             
             best_anchor_index = best_anchor(anchors, rayon)
             value[center][3 + best_anchor_index] = 1                                 #rayon anchor

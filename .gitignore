@@ -6,3 +6,5 @@ launch.json
 *.h5
 *.json
 *.png
+*.tflite
+

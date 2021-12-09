@@ -2,7 +2,6 @@ from skimage.draw import rectangle_perimeter
 
 import numpy as np
 import json
-from PIL import Image
 from pathlib import Path
 from tqdm import tqdm
 import config as cfg
@@ -20,12 +19,14 @@ def extract_labels(path_entree:str, path_sortie:str, etiquette_path:str):
 
     d = {}
 
+    image_height, image_width = cfg.get_image_resolution()
+
     for fichier, label in tqdm(zip(images, labels)):
         fichier = fichier.replace('\\', '/')
         label = label.replace('\\', '/')
         if '.gitignore' not in fichier:
             f = np.fromfile(fichier, dtype=np.float32)
-            f = np.reshape(f, (cfg.image_height,cfg.image_width,3))
+            f = np.reshape(f, (image_height, image_width, 3))
             l = np.fromfile(label, dtype=np.float32)
             x = l[0]/2
             y = l[1]/2
@@ -52,8 +53,10 @@ def extract_labels(path_entree:str, path_sortie:str, etiquette_path:str):
         shutil.copy(i, path_sortie + i.split('/')[-1])
 
 def main():
-    extract_labels(cfg.dossier_tempo_simulation, cfg.dossier_brut_simulation, cfg.labels_simulation)
-    #extract_labels(cfg.dossier_tempo_robot, cfg.dossier_brut_robot, cfg.labels_robot)
+    dossier_tempo = f'../NaovaCode/Dataset/{cfg.camera}/'
+    dossier_brut = cfg.get_dossier('Simulation', 'Brut')
+    labels = cfg.get_labels_path('Simulation')
+    extract_labels(dossier_tempo, dossier_brut, labels)
     
 if __name__ == '__main__':
     main()

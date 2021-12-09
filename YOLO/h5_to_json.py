@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Convert a Keras model to frugally-deep format.
 """
+import tensorflow.keras.backend as K
+from tensorflow.keras.layers import Input, Embedding
+from tensorflow.keras.models import Model, load_model
 
 import base64
 import datetime
@@ -8,13 +11,10 @@ import hashlib
 import json
 import sys
 
-import numpy as np
-from tensorflow.keras import backend as K
-from tensorflow.keras.layers import Input, Embedding
-from tensorflow.keras.models import Model, load_model
-
 sys.path.insert(0,'..')
 import config as cfg
+
+import numpy as np
 
 __author__ = "Tobias Hermann"
 __copyright__ = "Copyright 2017, Tobias Hermann"
@@ -38,6 +38,7 @@ def transform_recurrent_kernel(kernel):
 def transform_kernels(kernels, n_gates, transform_func):
     """
     Transforms CuDNN kernel matrices (either LSTM or GRU) into the regular Keras format.
+
     Parameters
     ----------
     kernels : numpy.ndarray
@@ -46,6 +47,7 @@ def transform_kernels(kernels, n_gates, transform_func):
         Number of recurrent unit gates, 3 for GRU, 4 for LSTM.
     transform_func: function(numpy.ndarray)
         Function to apply to each input or recurrent kernel.
+
     Returns
     -------
     numpy.ndarray
@@ -614,6 +616,10 @@ def get_all_weights(model, prefix):
     layers = model.layers
     assert K.image_data_format() == 'channels_last'
     for layer in layers:
+        for node in layer.inbound_nodes:
+            if "training" in node.call_kwargs:
+                assert node.call_kwargs["training"] is not True, \
+                    "training=true is not supported, see https://github.com/Dobiasd/frugally-deep/issues/284"
         layer_type = type(layer).__name__
         name = prefix + layer.name
         assert is_ascii(name)
@@ -823,6 +829,6 @@ if __name__ == "__main__":
     sys.argv.insert(1, cfg.model_path_simulation)
     sys.argv.insert(2, cfg.model_path_simulation.replace('h5', 'json'))
     main()
-    sys.argv[1] = cfg.model_path_robot
+    """sys.argv[1] = cfg.model_path_robot
     sys.argv[2] = cfg.model_path_robot.replace('h5', 'json')
-    main()
+    main()"""

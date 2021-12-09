@@ -9,19 +9,21 @@ sys.path.insert(0,'..')
 import config as cfg
 
 def draw_rectangle_on_image(input_image, yolo_output, coords):
-    ratio_x = cfg.resized_image_width / cfg.yolo_width
-    ratio_y = cfg.resized_image_height / cfg.yolo_height
+    resized_image_height, resized_image_width = cfg.get_resized_image_resolution()
+    yolo_height, yolo_width = cfg.get_yolo_resolution()
+    ratio_x = resized_image_width / yolo_width
+    ratio_y = resized_image_height / yolo_height
     for i, obj in enumerate(yolo_output[coords]):
         center_x = (coords[1][i] + obj[1]) * ratio_x
         center_y = (coords[0][i] + obj[2]) * ratio_y
         anchor_index = np.where(obj[3:]==obj[3:].max())[0][0]
         anchors = cfg.get_anchors()
-        rayon = anchors[anchor_index] * cfg.resized_image_width
+        rayon = anchors[anchor_index] * resized_image_width
         left = int(center_x - rayon)
         top = int(center_y - rayon)
         right = int(center_x + rayon)
         bottom = int(center_y + rayon)
-        rect = rectangle_perimeter((top, left), (bottom, right), shape=(cfg.resized_image_height, cfg.resized_image_width), clip=True)
+        rect = rectangle_perimeter((top, left), (bottom, right), shape=(resized_image_height, resized_image_width), clip=True)
         input_image[rect] = 1
     return input_image
 
