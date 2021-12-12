@@ -49,7 +49,9 @@ def kmean(population, k = 10):
             break
     return sorted(clusters)
 
-if __name__ == '__main__':
+def main(camera):
+    cfg.camera = camera
+    
     rayons = read_rayons('../' + cfg.get_labels_path('Simulation'))
     anchors = kmean(rayons, cfg.get_nb_anchors())
     rayons.sort()
@@ -60,3 +62,7 @@ if __name__ == '__main__':
     print(anchors)
     with open(cfg.get_anchors_path(), 'w') as anchors_file:
         anchors_file.write(json.dumps(anchors))
+
+if __name__ == '__main__':
+    main('upper')
+    main('lower')

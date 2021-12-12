@@ -95,7 +95,7 @@ def train(train_generator, validation_generator, test_generator, modele_path, te
 
 def main():
     parser = argparse.ArgumentParser(description='Train a yolo model to detect balls on an image.')
-    parser.add_argument('environment', type=str, default='Simulation', nargs='?',t
+    parser.add_argument('environment', type=str, default='Simulation', nargs='?',
                         help='Entrainer pour la simulation ou les robots. "Simulation" ou "Robot".')
     parser.add_argument('camera', type=str, default='upper', nargs='?',
                         help='Entrainer pour la camera du haut ou du bas. "upper" ou "lower".')
