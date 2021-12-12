@@ -826,9 +826,22 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.argv.insert(1, cfg.model_path_simulation)
-    sys.argv.insert(2, cfg.model_path_simulation.replace('h5', 'json'))
+    cfg.camera = 'upper'
+    modele_path = cfg.get_modele_path('Simulation')
+    sys.argv.insert(1, modele_path)
+    sys.argv.insert(2, modele_path.replace('h5', 'json'))
     main()
-    """sys.argv[1] = cfg.model_path_robot
-    sys.argv[2] = cfg.model_path_robot.replace('h5', 'json')
-    main()"""
+
+    cfg.camera = 'lower'
+
+    modele_path = cfg.get_modele_path('Simulation')
+    sys.argv[1] = modele_path
+    sys.argv[2] = modele_path.replace('h5', 'json')
+    main()
+
+    """
+    modele_path = cfg.get_modele_path('Robot')
+    sys.argv[1] = modele_path
+    sys.argv[2] = modele_path.replace('h5', 'json')
+    main()
+    """

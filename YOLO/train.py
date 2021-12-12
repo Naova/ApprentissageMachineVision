@@ -9,7 +9,7 @@ from time import process_time
 
 import sys
 sys.path.insert(0,'..')
-
+import argparse
 
 import config as cfg
 from Dataset_Loader import create_dataset
@@ -93,11 +93,23 @@ def train(train_generator, validation_generator, test_generator, modele_path, te
             print(entree.nom + ' : ', stop - start)
             generate_prediction_image(prediction, entree_x, entree.y(), i)
 
-if __name__ == '__main__':
-    #simulation
-    env = 'Simulation'
+def main():
+    parser = argparse.ArgumentParser(description='Train a yolo model to detect balls on an image.')
+    parser.add_argument('environment', type=str, default='Simulation', nargs='?',t
+                        help='Entrainer pour la simulation ou les robots. "Simulation" ou "Robot".')
+    parser.add_argument('camera', type=str, default='upper', nargs='?',
+                        help='Entrainer pour la camera du haut ou du bas. "upper" ou "lower".')
+    args = parser.parse_args()
+
+    cfg.camera = args.camera
+    env = args.environment
+
     labels = cfg.get_labels_path(env)
     dossier_brut = cfg.get_dossier(env, 'Brut')
     modele_path = cfg.get_modele_path(env)
     train_generator, validation_generator, test_generator = create_dataset(16, '../'+labels, '../'+dossier_brut)
     train(train_generator, validation_generator, test_generator, modele_path, True)
+
+
+if __name__ == '__main__':
+    main()

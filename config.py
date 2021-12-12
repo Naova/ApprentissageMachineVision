@@ -1,9 +1,11 @@
 import json
 
-camera = 'lower' # doit etre dans {'upper', 'lower'}
+camera = 'upper' # doit etre dans {'upper', 'lower'}
 
-# env in {'Simulation', 'Robot', 'Genere'}
-# type_fichier in {'Brut', 'PNG'}
+"""
+env dans {'Simulation', 'Robot', 'Genere'}
+type_fichier in {'Brut', 'PNG'}
+"""
 def get_dossier(env='Simulation', type_fichier='Brut'):
     return f'Dataset/{env}/{camera}/{type_fichier}/'
 def get_labels_path(env='Simulation'):
@@ -77,8 +79,4 @@ model_path_robot = 'yolo_modele_robot.h5'
 
 def get_modele_path(env='Simulation'):
     env = env.lower()
-    if camera == 'upper':
-        return f'yolo_modele_{env}_upper.h5'
-    else:
-        return f'yolo_modele_{env}_lower.h5'
-
+    return f'yolo_modele_{env}_{camera}.h5'
