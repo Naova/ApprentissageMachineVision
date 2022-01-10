@@ -27,8 +27,8 @@ def get_image_resolution():
 upper_resized_image_height = 120
 upper_resized_image_width = 160
 
-lower_resized_image_height = 90
-lower_resized_image_width = 120
+lower_resized_image_height = 75
+lower_resized_image_width = 100
 
 def get_resized_image_resolution():
     if camera == 'upper':
@@ -37,11 +37,20 @@ def get_resized_image_resolution():
         return lower_resized_image_height, lower_resized_image_width
 
 #resolution de l'output du modele. Doit concorder avec le modele lui-meme. (voir la derniere couche du summary)
-upper_yolo_height = 28
-upper_yolo_width = 38
+upper_yolo_height = None
+upper_yolo_width = None
+lower_yolo_height = None
+lower_yolo_width = None
 
-lower_yolo_height = 20
-lower_yolo_width = 28
+def set_yolo_resolution(height, width):
+    if camera == 'upper':
+        global upper_yolo_height, upper_yolo_width
+        upper_yolo_height = height
+        upper_yolo_width = width
+    else:
+        global lower_yolo_height, lower_yolo_width
+        lower_yolo_height = height
+        lower_yolo_width = width
 
 def get_yolo_resolution():
     if camera == 'upper':

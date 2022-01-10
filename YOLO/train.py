@@ -23,7 +23,7 @@ def add_conv_2d(x, n_filters=16, kernel=kernel(3), stride=kernel(1), ConvType=Co
     x = ConvType(n_filters, kernel, stride, activation=LeakyReLU())(x)
     return x
 
-def create_model(shape:tuple, nb_anchors:int):
+def create_model_upper(shape:tuple, nb_anchors:int):
     inputs = keras.layers.Input(shape=shape)
     x = SeparableConv2D(48, kernel(5), kernel(2))(inputs)
     x = LeakyReLU()(x)
@@ -36,6 +36,26 @@ def create_model(shape:tuple, nb_anchors:int):
 
     x = Conv2D(3 + nb_anchors, kernel(1), kernel(1), activation='sigmoid')(x)
     return keras.models.Model(inputs, x)
+
+def create_model_lower(shape:tuple, nb_anchors:int):
+    inputs = keras.layers.Input(shape=shape)
+    x = SeparableConv2D(32, kernel(5), kernel(2))(inputs)
+    x = LeakyReLU()(x)
+    
+    x = SeparableConv2D(32, kernel(3), kernel(2))(x)
+    x = LeakyReLU()(x)
+    x = MaxPool2D()(x)
+    x = Dense(16)(x)
+    x = LeakyReLU()(x)
+
+    x = Conv2D(3 + nb_anchors, kernel(1), kernel(1), activation='sigmoid')(x)
+    return keras.models.Model(inputs, x)
+
+def create_model(shape:tuple, nb_anchors:int):
+    if cfg.camera == 'upper':
+        return create_model_upper(shape, nb_anchors)
+    else:
+        return create_model_lower(shape, nb_anchors)
 
 def train_model(modele, train_generator, validation_generator):
     modele.compile(optimizer=keras.optimizers.Adam(), loss='binary_crossentropy')
@@ -77,12 +97,14 @@ def train(train_generator, validation_generator, test_generator, modele_path, te
     shape = (resized_image_height, resized_image_width, 3)
     if cfg.retrain:
         modele = create_model(shape, cfg.get_nb_anchors())
+        cfg.set_yolo_resolution(modele.output_shape[1], modele.output_shape[2])
         modele.summary()
         modele = train_model(modele, train_generator, validation_generator)
         modele.save(modele_path, include_optimizer=False)
         print('sauvegarde du modele : ' + modele_path)
     else:
         modele = keras.models.load_model(modele_path)
+        cfg.set_yolo_resolution(modele.output_shape[1], modele.output_shape[2])
     
     if test:
         for i, entree in enumerate(test_generator):
@@ -95,14 +117,26 @@ def train(train_generator, validation_generator, test_generator, modele_path, te
 
 def main():
     parser = argparse.ArgumentParser(description='Train a yolo model to detect balls on an image.')
-    parser.add_argument('environment', type=str, default='Simulation', nargs='?',
-                        help='Entrainer pour la simulation ou les robots. "Simulation" ou "Robot".')
-    parser.add_argument('camera', type=str, default='upper', nargs='?',
-                        help='Entrainer pour la camera du haut ou du bas. "upper" ou "lower".')
+    action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument('-s', '--simulation', action='store_true',
+                        help='Entrainer pour l\'environnement de la simulation.')
+    action.add_argument('-r', '--robot', action='store_true',
+                        help='Entrainer pour l\'environnement des robots.')
+    action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument('-u', '--upper', action='store_true',
+                        help='Entrainer pour la camera du haut.')
+    action.add_argument('-l', '--lower', action='store_true',
+                        help='Entrainer pour la camera du bas.')
     args = parser.parse_args()
 
-    cfg.camera = args.camera
-    env = args.environment
+    if args.upper:
+        cfg.camera = "upper"
+    else:
+        cfg.camera = "lower"
+    if args.simulation:
+        env = "Simulation"
+    else:
+        env = "Robot"
 
     labels = cfg.get_labels_path(env)
     dossier_brut = cfg.get_dossier(env, 'Brut')
