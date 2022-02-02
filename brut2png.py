@@ -4,6 +4,7 @@ from pathlib import Path
 from tqdm import tqdm
 import config as cfg
 import os.path
+import argparse
 
 
 def get_dossiers(env='Simulation'):
@@ -30,7 +31,34 @@ def brut_2_png(path_entree:str, path_sortie:str, convert_to_rgb:bool):
             image.save(new_path_sortie, "png")
 
 def main():
-    dossier_brut, dossier_PNG = get_dossiers('Simulation')
+    parser = argparse.ArgumentParser(description='Convertit toutes les images brutes en PNGs dans un dossier adjacent.')
+    action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument('-s', '--simulation', action='store_true',
+                        help='Traiter les images de simulation.')
+    action.add_argument('-r', '--robot', action='store_true',
+                        help='Traiter les photos du robot.')
+    action.add_argument('-g', '--genere', action='store_true',
+                        help='Traiter les images generees par CycleGAN.')
+    action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument('-u', '--upper', action='store_true',
+                        help='Traiter les images de la camera du haut.')
+    action.add_argument('-l', '--lower', action='store_true',
+                        help='Traiter les images de la camera du bas.')
+    args = parser.parse_args()
+
+    if args.simulation:
+        env = 'Simulation'
+    elif args.robot:
+        env = 'Robot'
+    elif args.genere:
+        env = 'Genere'
+    
+    if args.upper:
+        cfg.camera = "upper"
+    else:
+        cfg.camera = "lower"
+    
+    dossier_brut, dossier_PNG = get_dossiers(env)
     print("De " + dossier_brut + " vers " + dossier_PNG)
     brut_2_png(dossier_brut, dossier_PNG, True)
 
