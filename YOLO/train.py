@@ -1,7 +1,5 @@
-import tensorflow as tf
 import tensorflow.keras as keras
-from tensorflow.keras.layers import Conv2D, MaxPool2D, Dense, LeakyReLU, SeparableConv2D
-import tensorflow.keras.backend as K
+from tensorflow.keras.layers import Conv2D, MaxPool2D, SeparableConv2D
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,44 +10,30 @@ sys.path.insert(0,'..')
 import argparse
 
 import config as cfg
-from Dataset_Loader import create_dataset
+from Dataset_Loader import create_dataset, lire_entrees
 import utils
 
 
 def kernel(x):
     return (x, x)
 
-def add_conv_2d(x, n_filters=16, kernel=kernel(3), stride=kernel(1), ConvType=Conv2D):
-    x = ConvType(n_filters, kernel, stride, activation=LeakyReLU())(x)
-    return x
-
 def create_model_upper(shape:tuple, nb_anchors:int):
-    inputs = keras.layers.Input(shape=shape)
-    x = SeparableConv2D(48, kernel(5), kernel(2))(inputs)
-    x = LeakyReLU()(x)
-    
-    x = SeparableConv2D(48, kernel(3), kernel(1))(x)
-    x = LeakyReLU()(x)
+    inputs = keras.Input(shape=(*cfg.get_resized_image_resolution(), 3))
+    x = SeparableConv2D(48, kernel(3), kernel(2), activation='relu')(inputs)
+    x = SeparableConv2D(48, kernel(3), kernel(2), activation='relu')(x)
     x = MaxPool2D()(x)
-    x = Dense(32)(x)
-    x = LeakyReLU()(x)
-
+    x = Conv2D(32, kernel(1), kernel(1), activation='relu')(x)
     x = Conv2D(3 + nb_anchors, kernel(1), kernel(1), activation='sigmoid')(x)
-    return keras.models.Model(inputs, x)
+    return keras.Model(inputs=inputs, outputs=x)
 
 def create_model_lower(shape:tuple, nb_anchors:int):
-    inputs = keras.layers.Input(shape=shape)
-    x = SeparableConv2D(32, kernel(5), kernel(2))(inputs)
-    x = LeakyReLU()(x)
-    
-    x = SeparableConv2D(32, kernel(3), kernel(2))(x)
-    x = LeakyReLU()(x)
+    inputs = keras.Input(shape=(*cfg.get_resized_image_resolution(), 3))
+    x = SeparableConv2D(32, kernel(5), kernel(2), activation='relu')(inputs)
+    x = SeparableConv2D(32, kernel(3), kernel(2), activation='relu')(x)
     x = MaxPool2D()(x)
-    x = Dense(16)(x)
-    x = LeakyReLU()(x)
-
+    x = Conv2D(16, kernel(1), kernel(1), activation='relu')(x)
     x = Conv2D(3 + nb_anchors, kernel(1), kernel(1), activation='sigmoid')(x)
-    return keras.models.Model(inputs, x)
+    return keras.Model(inputs=inputs, outputs=x)
 
 def create_model(shape:tuple, nb_anchors:int):
     if cfg.camera == 'upper':
@@ -59,7 +43,7 @@ def create_model(shape:tuple, nb_anchors:int):
 
 def train_model(modele, train_generator, validation_generator):
     modele.compile(optimizer=keras.optimizers.Adam(), loss='binary_crossentropy')
-    es = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=2, restore_best_weights=True)
+    es = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.00001, patience=2, restore_best_weights=True)
     modele.fit(train_generator, validation_data=validation_generator, epochs=40, callbacks=[es])
     return modele
 
@@ -79,8 +63,6 @@ def display_model_prediction(prediction, wanted_prediction, prediction_on_image,
     fig.add_subplot(2, 2, 4)
     plt.imshow(wanted_output)
     plt.title('ground truth on image')
-    figManager = plt.get_current_fig_manager()
-    figManager.window.showMaximized()
     if save_to_file_name:
         plt.savefig('predictions/' + save_to_file_name, dpi=300)
     plt.show()
@@ -92,13 +74,13 @@ def generate_prediction_image(prediction, x_test, y_test, prediction_number = No
     wanted_output = utils.draw_rectangle_on_image(utils.ycbcr2rgb(x_test.copy()), y_test, coords)
     display_model_prediction(prediction[:,:,0], y_test[:,:,0], prediction_on_image, wanted_output, 'prediction_' + str(prediction_number) + '.png')
 
-def train(train_generator, validation_generator, test_generator, modele_path, test=True):
+def train(train_generator, validation_generator, test_data, modele_path, test=True):
     resized_image_height, resized_image_width = cfg.get_resized_image_resolution()
     shape = (resized_image_height, resized_image_width, 3)
     if cfg.retrain:
         modele = create_model(shape, cfg.get_nb_anchors())
-        cfg.set_yolo_resolution(modele.output_shape[1], modele.output_shape[2])
         modele.summary()
+        cfg.set_yolo_resolution(modele.output_shape[1], modele.output_shape[2])
         modele = train_model(modele, train_generator, validation_generator)
         modele.save(modele_path, include_optimizer=False)
         print('sauvegarde du modele : ' + modele_path)
@@ -107,7 +89,7 @@ def train(train_generator, validation_generator, test_generator, modele_path, te
         cfg.set_yolo_resolution(modele.output_shape[1], modele.output_shape[2])
     
     if test:
-        for i, entree in enumerate(test_generator):
+        for i, entree in enumerate(test_data):
             entree_x = entree.x()
             start = process_time()
             prediction = modele.predict(np.array([entree_x]))[0]
@@ -136,13 +118,15 @@ def main():
     if args.simulation:
         env = "Simulation"
     else:
-        env = "Robot"
+        env = "Genere"
 
     labels = cfg.get_labels_path(env)
     dossier_brut = cfg.get_dossier(env, 'Brut')
     modele_path = cfg.get_modele_path(env)
-    train_generator, validation_generator, test_generator = create_dataset(16, '../'+labels, '../'+dossier_brut)
-    train(train_generator, validation_generator, test_generator, modele_path, True)
+    train_generator, validation_generator, test_data = create_dataset(16, '../'+labels, '../'+dossier_brut, env)
+    if not args.simulation:
+        test_data = lire_entrees('../'+cfg.get_labels_path('Robot'), '../'+cfg.get_dossier('Robot'), 'Robot')
+    train(train_generator, validation_generator, test_data, modele_path, True)
 
 
 if __name__ == '__main__':
