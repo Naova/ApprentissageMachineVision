@@ -7,7 +7,6 @@ from time import process_time
 
 import sys
 sys.path.insert(0,'..')
-import argparse
 
 import config as cfg
 from Dataset_Loader import create_dataset, lire_entrees
@@ -98,27 +97,8 @@ def train(train_generator, validation_generator, test_data, modele_path, test=Tr
             generate_prediction_image(prediction, entree_x, entree.y(), i)
 
 def main():
-    parser = argparse.ArgumentParser(description='Train a yolo model to detect balls on an image.')
-    action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument('-s', '--simulation', action='store_true',
-                        help='Entrainer pour l\'environnement de la simulation.')
-    action.add_argument('-r', '--robot', action='store_true',
-                        help='Entrainer pour l\'environnement des robots.')
-    action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument('-u', '--upper', action='store_true',
-                        help='Entrainer pour la camera du haut.')
-    action.add_argument('-l', '--lower', action='store_true',
-                        help='Entrainer pour la camera du bas.')
-    args = parser.parse_args()
-
-    if args.upper:
-        cfg.camera = "upper"
-    else:
-        cfg.camera = "lower"
-    if args.simulation:
-        env = "Simulation"
-    else:
-        env = "Genere"
+    args = utils.parse_args_env_cam('Train a yolo model to detect balls on an image.')
+    env = utils.set_config(args)
 
     labels = cfg.get_labels_path(env)
     dossier_brut = cfg.get_dossier(env, 'Brut')

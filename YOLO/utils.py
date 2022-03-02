@@ -4,9 +4,44 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
+import argparse
+
 import sys
 sys.path.insert(0,'..')
 import config as cfg
+
+
+def parse_args_env_cam(description: str, genere: bool = False):
+    parser = argparse.ArgumentParser(description=description)
+
+    action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument('-s', '--simulation', action='store_true',
+                        help='Utiliser l\'environnement de la simulation.')
+    action.add_argument('-r', '--robot', action='store_true',
+                        help='Utiliser l\'environnement des robots.')
+    if genere:
+        action.add_argument('-g', '--genere', action='store_true',
+                        help='Utiliser l\'environnement genere par CycleGAN.')
+    action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument('-u', '--upper', action='store_true',
+                        help='Utiliser la camera du haut.')
+    action.add_argument('-l', '--lower', action='store_true',
+                        help='Utiliser la camera du bas.')
+
+    return parser.parse_args()
+
+def set_config(args, use_robot: bool = False):
+    if args.upper:
+        cfg.camera = "upper"
+    else:
+        cfg.camera = "lower"
+    if use_robot:
+        if args.robot:
+            return "Robot"
+    if args.simulation:
+        return "Simulation"
+    else:
+        return "Genere"
 
 def draw_rectangle_on_image(input_image, yolo_output, coords):
     resized_image_height, resized_image_width = cfg.get_resized_image_resolution()

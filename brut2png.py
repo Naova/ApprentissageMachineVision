@@ -4,7 +4,7 @@ from pathlib import Path
 from tqdm import tqdm
 import config as cfg
 import os
-import argparse
+import YOLO.utils
 
 
 def get_dossiers(env='Simulation'):
@@ -39,32 +39,10 @@ def brut_2_png(path_entree:str, path_sortie:str, convert_to_rgb:bool, env:str):
             image.save(new_path_sortie, "png")
 
 def main():
-    parser = argparse.ArgumentParser(description='Convertit toutes les images brutes en PNGs dans un dossier adjacent.')
-    action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument('-s', '--simulation', action='store_true',
-                        help='Traiter les images de simulation.')
-    action.add_argument('-r', '--robot', action='store_true',
-                        help='Traiter les photos du robot.')
-    action.add_argument('-g', '--genere', action='store_true',
-                        help='Traiter les images generees par CycleGAN.')
-    action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument('-u', '--upper', action='store_true',
-                        help='Traiter les images de la camera du haut.')
-    action.add_argument('-l', '--lower', action='store_true',
-                        help='Traiter les images de la camera du bas.')
-    args = parser.parse_args()
+    args = YOLO.utils.parse_args_env_cam('Convertit toutes les images brutes en PNGs dans un dossier adjacent.',
+                                         genere=True)
 
-    if args.simulation:
-        env = 'Simulation'
-    elif args.robot:
-        env = 'Robot'
-    elif args.genere:
-        env = 'Genere'
-    
-    if args.upper:
-        cfg.camera = "upper"
-    else:
-        cfg.camera = "lower"
+    env = YOLO.utils.set_config(args, True)
     
     dossier_brut, dossier_PNG = get_dossiers(env)
     print("De " + dossier_brut + " vers " + dossier_PNG)
