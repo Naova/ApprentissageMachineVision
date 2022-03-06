@@ -1,3 +1,4 @@
+import os
 import json
 
 camera = 'upper' # doit etre dans {'upper', 'lower'}
@@ -86,7 +87,10 @@ def get_anchors():
     if __yolo_anchors:
         return __yolo_anchors
     else:
-        with open(get_anchors_path(), 'r') as anchors_file:
+        anchors_path = get_anchors_path()
+        if not os.path.exists(anchors_path):
+            raise Exception('Anchors file doesn\'t exist. Maybe you should run the clustering.py script before training the model.')
+        with open(anchors_path, 'r') as anchors_file:
             __yolo_anchors = json.loads(anchors_file.read())
         return __yolo_anchors
 

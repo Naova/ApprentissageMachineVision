@@ -20,6 +20,9 @@ def brut_2_png(path_entree:str, path_sortie:str, convert_to_rgb:bool, env:str):
             if not os.path.exists(folder):
                 os.mkdir(folder)
         new_path_sortie = path_sortie + fichier.split('Brut/')[-1] + ".png"
+        repertoire_sortie = '/'.join(new_path_sortie.split('/')[:-1])
+        if not os.path.exists(repertoire_sortie):
+            os.makedirs(repertoire_sortie)
         if not os.path.isfile(new_path_sortie):
             f = np.fromfile(fichier, dtype=np.float32)
             if env == 'Genere':

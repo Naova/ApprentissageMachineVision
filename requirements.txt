@@ -6,3 +6,5 @@ tensorflow==2.5.2
 tqdm
 scikit-image
 git+https://github.com/Naova/nncg@NaovaVision
+#NNCG's additional dependencies :
+pydot
