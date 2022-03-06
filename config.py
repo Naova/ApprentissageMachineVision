@@ -1,3 +1,4 @@
+import os
 import json
 
 camera = 'upper' # doit etre dans {'upper', 'lower'}
@@ -12,23 +13,32 @@ def get_labels_path(env='Simulation'):
     return f'Dataset/{env}/{camera}/labels.json'
 
 #resolution de l'image d'entree
-upper_image_height = 240
-upper_image_width = 320
+resolutions = {
+    'Simulation': {
+        'upper': (240, 320),
+        'lower': (120, 160),
+    },
+    'Genere': {
+        'upper': (128, 144),
+        'lower': (128, 144),
+    },
+    'Robot': {
+        'upper': (240, 320),
+        'lower': (120, 160),
+    },
+}
 
-lower_image_height = 120
-lower_image_width = 160
-
-def get_image_resolution():
-    if camera == 'upper':
-        return upper_image_height, upper_image_width
-    else:
-        return lower_image_height, lower_image_width
+def get_image_resolution(env='Simulation'):
+    return resolutions[env][camera]
 
 upper_resized_image_height = 120
 upper_resized_image_width = 160
 
 lower_resized_image_height = 75
 lower_resized_image_width = 100
+
+cycle_gan_image_height = 128
+cycle_gan_image_width = 144
 
 def get_resized_image_resolution():
     if camera == 'upper':
@@ -77,15 +87,18 @@ def get_anchors():
     if __yolo_anchors:
         return __yolo_anchors
     else:
-        with open(get_anchors_path(), 'r') as anchors_file:
+        anchors_path = get_anchors_path()
+        if not os.path.exists(anchors_path):
+            raise Exception('Anchors file doesn\'t exist. Maybe you should run the clustering.py script before training the model.')
+        with open(anchors_path, 'r') as anchors_file:
             __yolo_anchors = json.loads(anchors_file.read())
         return __yolo_anchors
 
 flipper_images = True
 retrain = True
-model_path_simulation = 'yolo_modele_simulation.h5'
-model_path_robot = 'yolo_modele_robot.h5'
 
 def get_modele_path(env='Simulation'):
     env = env.lower()
+    if env == 'genere':
+        env = 'robot'
     return f'yolo_modele_{env}_{camera}.h5'
