@@ -31,7 +31,6 @@ def main():
     model.summary()
 
     code_path = "."
-
     
     images = create_dummy_db()
 
