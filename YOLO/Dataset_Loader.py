@@ -52,13 +52,13 @@ class Entree:
             center_y = int(y / image_height * yolo_height)
             center = (center_y, center_x)
 
-            value[center][0] = 1                                                     #presence d'objet
+            value[center][0] = 1                                             #presence d'objet
             value[center][1] = x / image_width * yolo_width - center_x       #center_x
             value[center][2] = y / image_height * yolo_height - center_y     #center_y
             rayon = max(width, height) / image_width / 2
             
             best_anchor_index = best_anchor(anchors, rayon)
-            value[center][3 + best_anchor_index] = 1                                 #rayon anchor
+            value[center][3 + best_anchor_index] = 1                         #rayon anchor
 
         return value
 
@@ -73,9 +73,16 @@ def lire_entrees(labels_path:str, brut_path:str, env:str = 'Simulation'):
             entrees.append(Entree(image_label, labels[image_label], fichier_image, False, env))
     return entrees
 
+def lire_toutes_les_images(path:str):
+    dossier = Path(path).glob('*')
+    fichiers = [str(f) for f in dossier]
+    entrees = [Entree(f.split('/')[-1], {}, f, False, 'Robot') for f in fichiers]
+    entrees += [Entree(f.split('/')[-1], {}, f, True, 'Robot') for f in fichiers]
+    return entrees
+
 def split_dataset(entrees, batch_size=16, test=True):
     random.shuffle(entrees)
-    ratio_train = 0.95 #90%
+    ratio_train = 0.95 #95%
     ratio_test = 20 / len(entrees) #nombre fixe, pas besoin de plus
     #ratio_validation = 10% - 20
 
@@ -93,5 +100,8 @@ def split_dataset(entrees, batch_size=16, test=True):
 
 def create_dataset(batch_size, labels_path:str, images_path:str, env:str):
     entrees = lire_entrees(labels_path, images_path, env)
+    if env == 'Genere':
+        path = '../' + cfg.get_dossier('RobotSansBalle', 'Brut')
+        entrees += lire_toutes_les_images(path)
     train, validation, test = split_dataset(entrees, batch_size, env == 'Simulation')
     return train, validation, test
