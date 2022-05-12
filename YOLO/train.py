@@ -9,7 +9,7 @@ import sys
 sys.path.insert(0,'..')
 
 import config as cfg
-from Dataset_Loader import create_dataset, lire_entrees
+from Dataset_Loader import create_dataset, lire_entrees, lire_toutes_les_images
 import utils
 
 
@@ -74,6 +74,7 @@ def display_model_prediction(prediction, wanted_prediction, prediction_on_image,
 
 def generate_prediction_image(prediction, x_test, y_test, prediction_number = None):
     coords = utils.n_max_coord(prediction[:,:,0], 1)
+    #coords = utils.non_max_suppression(prediction)
     prediction_on_image = utils.draw_rectangle_on_image(utils.ycbcr2rgb(x_test.copy()), prediction, coords)
     coords = utils.treshold_coord(y_test[:,:,0])
     wanted_output = utils.draw_rectangle_on_image(utils.ycbcr2rgb(x_test.copy()), y_test, coords)
@@ -91,6 +92,7 @@ def train(train_generator, validation_generator, test_data, modele_path, test=Tr
         print('sauvegarde du modele : ' + modele_path)
     else:
         modele = keras.models.load_model(modele_path)
+        modele.summary()
         cfg.set_yolo_resolution(modele.output_shape[1], modele.output_shape[2])
     
     if test:
@@ -111,7 +113,8 @@ def main():
     modele_path = cfg.get_modele_path(env)
     train_generator, validation_generator, test_data = create_dataset(16, '../'+labels, '../'+dossier_brut, env)
     if not args.simulation:
-        test_data = lire_entrees('../'+cfg.get_labels_path('Robot'), '../'+cfg.get_dossier('Robot'), 'Robot')
+        #test_data = lire_entrees('../'+cfg.get_labels_path('Robot'), '../'+cfg.get_dossier('Robot'), 'Robot')
+        test_data = lire_toutes_les_images('../'+cfg.get_dossier('RobotSansBalle'))
     train(train_generator, validation_generator, test_data, modele_path, True)
 
 

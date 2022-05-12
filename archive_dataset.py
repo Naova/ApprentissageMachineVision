@@ -2,7 +2,7 @@ from tqdm import tqdm
 import zipfile
 import pathlib
 
-dataset_subfolders = ["Genere", "Robot", "Simulation", "RobotSansBalle"]
+dataset_subfolders = ["Genere", "Robot", "Simulation", "HardNegative"]
 cameras = ["lower", "upper"]
 things_to_zip = ["labels.json", "Brut"]
 

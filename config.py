@@ -12,6 +12,8 @@ def get_dossier(env='Simulation', type_fichier='Brut'):
 def get_labels_path(env='Simulation'):
     return f'Dataset/{env}/{camera}/labels.json'
 
+naovaCodePath = '../NaovaCode'
+
 #resolution de l'image d'entree
 resolutions = {
     'Simulation': {

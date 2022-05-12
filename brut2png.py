@@ -43,7 +43,8 @@ def brut_2_png(path_entree:str, path_sortie:str, convert_to_rgb:bool, env:str):
 
 def main():
     args = YOLO.utils.parse_args_env_cam('Convertit toutes les images brutes en PNGs dans un dossier adjacent.',
-                                         genere=True)
+                                         genere=True,
+                                         hardnegative=True)
 
     env = YOLO.utils.set_config(args, True)
     

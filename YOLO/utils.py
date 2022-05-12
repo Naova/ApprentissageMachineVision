@@ -11,7 +11,7 @@ sys.path.insert(0,'..')
 import config as cfg
 
 
-def parse_args_env_cam(description: str, genere: bool = False):
+def parse_args_env_cam(description: str, genere: bool = False, hardnegative: bool = False):
     parser = argparse.ArgumentParser(description=description)
 
     action = parser.add_mutually_exclusive_group(required=True)
@@ -22,6 +22,9 @@ def parse_args_env_cam(description: str, genere: bool = False):
     if genere:
         action.add_argument('-g', '--genere', action='store_true',
                         help='Utiliser l\'environnement genere par CycleGAN.')
+    if hardnegative:
+        action.add_argument('-hn', '--hardnegative', action='store_true',
+                        help='Utiliser les photos HardNegative.')
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument('-u', '--upper', action='store_true',
                         help='Utiliser la camera du haut.')
@@ -30,7 +33,7 @@ def parse_args_env_cam(description: str, genere: bool = False):
 
     return parser.parse_args()
 
-def set_config(args, use_robot: bool = False):
+def set_config(args, use_robot: bool = True, use_genere: bool = False):
     if args.upper:
         cfg.camera = "upper"
     else:
@@ -40,8 +43,12 @@ def set_config(args, use_robot: bool = False):
             return "Robot"
     if args.simulation:
         return "Simulation"
-    else:
-        return "Genere"
+    elif use_genere:
+        if args.genere:
+            return "Genere"
+    if args.hardnegative:
+        return "HardNegative"
+    raise Exception('Pas d''environnement valide selectionne!')
 
 def draw_rectangle_on_image(input_image, yolo_output, coords):
     resized_image_height, resized_image_width = cfg.get_resized_image_resolution()
@@ -88,3 +95,48 @@ def display_yolo_rectangles(input_image, yolo_output):
     input_image = draw_rectangle_on_image(input_image, yolo_output, coord)
     plt.imshow(input_image)
     plt.show()
+
+def non_max_suppression(prediction: np.array):
+    #treshold
+    coords = treshold_coord(prediction[:,:,0], 0.2)
+
+    resized_image_height, resized_image_width = cfg.get_resized_image_resolution()
+    yolo_height, yolo_width = cfg.get_yolo_resolution()
+    ratio_x = resized_image_width / yolo_width
+    ratio_y = resized_image_height / yolo_height
+
+    boxes = np.empty((0, 5))
+    #define boxes
+    for i, j in zip(coords[0], coords[1]):
+        confidence = prediction[i,j,0]
+        anchor = cfg.get_anchors()[np.where(prediction==max(prediction[i,j,3:]))[2][0]-3]
+        rayon = anchor * resized_image_width
+        center_x = (i + prediction[i,j,1]) * ratio_x
+        center_y = (j + prediction[i,j,2]) * ratio_y
+        left = int(center_x - rayon)
+        right = int(center_x + rayon)
+        top = int(center_y - rayon)
+        bottom = int(center_y + rayon)
+        box = [confidence, left, top, right, bottom]
+        boxes = np.concatenate((boxes, np.array([box])), axis=0)
+
+    #merge NMS
+    nb_boxes = len(boxes)
+    for i in range(nb_boxes):
+        if i >= len(boxes):
+            break
+        box1 = boxes[i]
+        for j in range(nb_boxes):
+            if i == j:
+                continue
+            if j >= len(boxes):
+                break
+            box2 = boxes[j]
+            #check overlap
+            
+            #merge
+
+            #remove boxes
+    breakpoint()
+    return coords
+    

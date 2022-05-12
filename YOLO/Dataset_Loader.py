@@ -3,6 +3,7 @@ from pathlib import Path
 import json
 import utils
 import random
+import math
 
 from PIL import Image
 
@@ -18,11 +19,27 @@ def best_anchor(anchors, rayon):
 class Entree:
     def __init__(self, nom:str, labels:dict, image_path:str, flipper:bool, env:str):
         self.nom = nom
-        #self.robots = [label for label in labels if label['categorie'] == 2]
         self.balles = [label for label in labels if label['categorie'] == 1]
         self.image_path = image_path
         self.flipper = flipper
         self.env = env
+    def nearest(self, image, resized_image_width, resized_image_height):
+        """
+        Exact same function as executed in C++ on the robot.
+        """
+        new_image = np.zeros((resized_image_height, resized_image_width, 3))
+        x_scale = (image.shape[1] * 1.0) / resized_image_width
+        y_scale = (image.shape[0] * 1.0) / resized_image_height
+        x = 0
+        y = 0
+        for i in range(resized_image_height):
+            x = math.floor(1.0 + (i * x_scale))
+            for j in range(resized_image_width):
+                y = math.floor(1.0 + (j * y_scale))
+                new_image[i][j][0] = image[x][y][0]
+                new_image[i][j][1] = image[x][y][1]
+                new_image[i][j][2] = image[x][y][2]
+        return new_image
     def x(self):
         image_height, image_width = cfg.get_image_resolution(self.env)
         resized_image_height, resized_image_width = cfg.get_resized_image_resolution()
@@ -66,11 +83,11 @@ def lire_entrees(labels_path:str, brut_path:str, env:str = 'Simulation'):
     entrees = []
     with open(labels_path) as fichier:
         labels = json.loads(fichier.read())
-        for image_label in labels:
-            fichier_image = brut_path + image_label
-            if cfg.flipper_images:
-                entrees.append(Entree(image_label, labels[image_label], fichier_image, True, env))
-            entrees.append(Entree(image_label, labels[image_label], fichier_image, False, env))
+    for image_label in labels:
+        fichier_image = brut_path + image_label
+        if cfg.flipper_images:
+            entrees.append(Entree(image_label, labels[image_label], fichier_image, True, env))
+        entrees.append(Entree(image_label, labels[image_label], fichier_image, False, env))
     return entrees
 
 def lire_toutes_les_images(path:str):
@@ -101,7 +118,7 @@ def split_dataset(entrees, batch_size=16, test=True):
 def create_dataset(batch_size, labels_path:str, images_path:str, env:str):
     entrees = lire_entrees(labels_path, images_path, env)
     if env == 'Genere':
-        path = '../' + cfg.get_dossier('RobotSansBalle', 'Brut')
+        path = '../' + cfg.get_dossier('HardNegative', 'Brut')
         entrees += lire_toutes_les_images(path)
     train, validation, test = split_dataset(entrees, batch_size, env == 'Simulation')
     return train, validation, test
