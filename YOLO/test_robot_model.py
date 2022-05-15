@@ -5,14 +5,14 @@ import numpy as np
 import json
 import tqdm
 import matplotlib.pyplot as plt
+import shutil
+from datetime import datetime
 import sys
 sys.path.insert(0,'..')
 
 import config as cfg
 import utils
 from Dataset_Loader import lire_toutes_les_images
-
-from train import generate_prediction_image
 
 def centile(x:List[float], y:float):
     return x[int(y * len(x))]
@@ -35,8 +35,11 @@ def main():
         max_confidences.append((entree.nom, prediction[:,:,0].max().astype('float')))
     max_confidences.sort(key=lambda x: x[1])
     y = [x[1] for x in max_confidences]
+
+    time = datetime.now().strftime('%d_%m_%Y-%H-%M-%S')
+
     plt.scatter(range(len(max_confidences)), y)
-    plt.savefig('tests/10_mai_2022.png')
+    plt.savefig(f'tests/{time}.png')
 
     stats = {
         'max_confidences':max_confidences,
@@ -56,8 +59,13 @@ def main():
         '80_seuil':seuil(max_confidences, 0.8),
     }
     
-    with open('tests/10_mai_2022.json', 'w') as f:
+    with open(f'tests/{time}.json', 'w') as f:
         json.dump(stats, f)
+    
+    source = cfg.get_modele_path(env)
+    destination = f'tests/{time}.h5'
+    shutil.copy(source, destination)
+
     
 if __name__ == '__main__':
     main()
