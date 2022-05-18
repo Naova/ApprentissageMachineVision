@@ -106,7 +106,7 @@ def train(train_generator, validation_generator, test_data, modele_path, test=Tr
 
 def main():
     args = utils.parse_args_env_cam('Train a yolo model to detect balls on an image.')
-    env = utils.set_config(args)
+    env = utils.set_config(args, use_robot=False)
 
     labels = cfg.get_labels_path(env)
     dossier_brut = cfg.get_dossier(env, 'Brut')

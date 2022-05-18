@@ -41,6 +41,9 @@ def set_config(args, use_robot: bool = True, use_genere: bool = False):
     if use_robot:
         if args.robot:
             return "Robot"
+    else:
+        if args.robot:
+            return "Genere"
     if args.simulation:
         return "Simulation"
     elif use_genere:
