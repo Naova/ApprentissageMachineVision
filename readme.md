@@ -6,45 +6,61 @@ Code Python permettant d'étiqueter des images de balles et d'entraîner un rés
 
 Lancer l'entraînement requiert un environnement Python avec certains paquets installés. La liste se trouve dans le fichier `requirements.txt`.
 
-`h5py, matplotlib, numpy, Pillow, tensorboard==2.1.0, tensorflow==2.1.0, tqdm`
+`h5py, matplotlib, numpy, Pillow, tensorflow==2.5.2, tqdm, scikit-image, git+https://github.com/Naova/nncg@NaovaVision, pydot`
+
+Exécuter `pip install -r requirements.txt`
 
 Il est recommandé d'installer ces paquets dans un environnement virtuel.
 
+Télécharger le dataset à partir du Drive, et le dézipper dans le répertoire racine du dépot.
+Vous devriez avoir ApprentissageMachineVision/Dataset/{Robot/, Simulation/, ...}
+
 ## Utilisation
 
-### Étape 1
-On génère des images avec la branche de NaovaCode "Creation_Dataset".
+### Entraînement
 
-Il y a quelques endroits utiles pour changer des paramètres (au besoin):
+Le script `train.py` sert à entraîner le modèle. Il prend deux paramètres obligatoires pour déterminer l'environnement de déploiement (-r pour robot ou -s pour simulation) et la caméra utilisée (-u pour upper ou -l pour lower).
 
-`Src\Modules\Perception\DatasetCreator.h` Incrémenter la variable 'batch_number' à chaque fois qu'on génère une nouvelle part de dataset pour éviter les conflits avec les noms de fichiers et pour que tout reste bien clair. La variable 'saveImageMaxCountdown' sert à modifier la fréquence à laquelle on sauvegarde les images. Plus elle est petite, et plus les images seront enregistrées vites, et plus elles seront semblables les unes les autres, et plus la simulation sera lente.
+Par exemple, pour entraîner le modèle détectant les balles de la caméra du haut sur un robot physique :
+```
+cd YOLO
+python train.py -u -r
+```
 
-`Src\Representations\Infrastructure\Image.h`. Les variables 'maxKerasResolutionWidth' et 'maxKerasResolutionHeight' servent à déterminer la résolution de l'image de sortie (on fait un rescale de l'image pour réduire la charge de calculs).
+### Déploiement
 
-### Étape 2
+#### Génération du code
 
-Du dépôt git 'ApprentissageMachineVision', exécuter le script `brut_to_png.py`. Ce script génèrera les images PNG à partir des données provenant du Nao. Ça n'est techniquement pas obligatoire, mais permet de visualiser les données.
+Le script `h5_to_nncg.py` utilise nncg pour générer un fichier cpp. Encore une fois, il faut préciser quel modèle on veut selon l'environnement et la caméra.
 
-`etiquetage.py`, qui lance le programme pour étiqueter les images.
+Exemple d'utilisation pour la caméra du haut du robot:
+```
+python h5_to_nncg.py -u -r
+```
 
-Tous ces script utilisent le fichier `config.py` pour connaître les chemins vers les dossiers. À modifier pour vos chemins d'accès.
+#### Ajustements du code
 
-### Étape 3
+NNCG ne génère pas du code propre à être déployé dans NaovaCode. Non seulement ça, mais il fait aussi une erreur de compilation (oups). Le script `fix_generated_code.py` règle ces problèmes. Il est bien important de le lancer une seule fois pour un fichier cpp. Autrement, à la seconde exécution, le script brisera le code.
+Les modifications apportées au fichier cpp ne sont pas très nombreuses ni très compliquées. NNCG ne donne pas le bon type aux arguments de sa fonction; il déclare l'argument contenant le tableau de sortie comme un tableau à une dimension, mais y accède comme si c'était un tableau à trois dimensions. Le script modifie les deux arguments pour que ce soient des tableaux à une dimension. On va aussi modifier le code pour retirer des aberrations, comme des additions de 0 ou des multiplications par 1 qui se répètent un peu partout.
+Éventuellement, on pourra s'arranger pour ne plus avoir de warnings quand on make le projet.
 
-Une fois que le programme d'étiquetage est lancé, une fenêtre apparaît à l'écran avec une image provenant de la caméra du nao.
+Ce script a la même interface que les autres :
+```
+python fix_generated_code.py -u -r
+```
 
-Si l'image ne contient pas de balle : passer à l'image suivante en appuyant sur la touche 'd'.
+#### Déplacer les fichiers
 
-Si l'image contient une balle : faire un clic gauche de la souris sur un coin de la balle, puis glisser la souris jusqu'au coin opposé, puis relâcher le bouton. Cela permet de calculer à la fois la position et le rayon de la balle. Passer à l'image suivante en appuyant sur la touche 'd'.
+Pour sauver du temps à copier-coller les fichiers .cpp, on peut simplement lancer le script `move_cpp_file.py`, qui va copier le fichier cpp sélectionné au bon endoit dans NaovaCode. Nécessite d'avoir bien indiqué où se trouve NaovaCode sur votre ordinateur dans le fichier `config.py`.
 
-Pour revenir en arrière d'une image, appuyer sur la touche 'a'.
+```
+python move_cpp_file.py -u -r
+```
 
-La progression est sauvegardée à chaque changement d'image. Faire un retour en arrière efface l'étiquette pour l'image précédente.
+#### Dans NaovaCode
 
-### Étape 4
-
-Lancer le script `clustering.py`. Cela créera un fichier `anchors.json` basé sur les étiquettes du dataset pour sélectionner les rayons de balles optimaux.
-
-### Étape 5
-
-Lancer le script `train.py`. Cela utilisera les fichiers étiquetés et les ancres générées précédemment pour performer un entraînement d'un modèle et le sauvegardera dans un fichier HDF, puis le convertira en json, au format lisible par Frugally Deep, la librairie utilisée par les NAOs pour exécuter les réseaux de neurones.
+On peut alors configurer et compiler NaovaCode.
+Pour la configuration, le seul fichier important est `Src/Representations/Configuration/YoloModelDefinitions.h`.
+Il définit un certain nombre de macros qui doivent correspondre aux valeurs utilisées lors de l'entraînement du modèle.
+Donc si on entraîne un modèle avec une résolution d'entrée ou de sortie différente de la version précédente, il faudra changer les définitions correspondantes dans ce fichier.
+Il y a aussi deux hyperparamètres à configurer "à la main" selon les performances du modèle, les seuils minimaux de confiance. Ce doivent être des valeurs comprises entre 0 et 1, définissant le niveau de confiance minimal de modèle pour accepter une détection. Une valeur trop basse créera beaucoup de faux positifs et une valeur trop élevée n'acceptera pas beaucoup de détections.
