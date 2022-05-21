@@ -18,7 +18,7 @@ def centile(x:List[float], y:float):
     return x[int(y * len(x))]
 
 def seuil(x:List[float], y:float):
-    return len([_x for _x in x if _x[1] > y])
+    return len([_x for _x in x if _x[2] > y])
 
 def main():
     args = utils.parse_args_env_cam('Test the yolo model on a bunch of test images and output stats.')
@@ -29,20 +29,31 @@ def main():
 
     max_confidences = []
 
-    for i, entree in enumerate(tqdm.tqdm(test_data)):
+    for entree in tqdm.tqdm(test_data):
         entree_x = entree.x()
         prediction = modele.predict(np.array([entree_x]))[0]
-        max_confidences.append((entree.nom, prediction[:,:,0].max().astype('float')))
-    max_confidences.sort(key=lambda x: x[1])
-    y = [x[1] for x in max_confidences]
+        max_confidences.append((entree.nom, entree.flipper, prediction[:,:,0].max().astype('float')))
+    max_confidences.sort(key=lambda x: x[2])
+    y = [x[2] for x in max_confidences]
 
-    time = datetime.now().strftime('%d_%m_%Y-%H-%M-%S')
+    time = datetime.now().strftime('%Y_%m_%d-%H-%M-%S')
 
     plt.scatter(range(len(max_confidences)), y)
+    plt.rcParams["axes.titlesize"] = 10
+    plt.title(f'Niveau de confiance maximal par image du dataset de test.\nLe plus bas est le mieux.\n{time}')
+    plt.xlabel('Images')
+    plt.ylabel('Niveau de confiance')
+    plt.ylim(-0.05, 1.)
+    plt.grid()
+
     plt.savefig(f'tests/{time}.png')
 
+    somme = sum([x[2] for x in max_confidences])
+
+    print(somme)
+
     stats = {
-        'max_confidences':max_confidences,
+        'somme':somme,
         '0_centile':centile(max_confidences, 0),
         '25_centile':centile(max_confidences, 0.25),
         '50_centile':centile(max_confidences, 0.5),
@@ -59,7 +70,9 @@ def main():
         '80_seuil':seuil(max_confidences, 0.8),
     }
     
-    with open(f'tests/{time}.json', 'w') as f:
+    with open(f'tests/{time}_raw_data.json', 'w') as f:
+        json.dump(max_confidences, f)
+    with open(f'tests/{time}_stats.json', 'w') as f:
         json.dump(stats, f)
     
     source = cfg.get_modele_path(env)
