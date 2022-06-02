@@ -8,7 +8,7 @@ import YOLO.utils
 
 
 def get_dossiers(env='Simulation'):
-    return cfg.get_dossier(env, 'Brut'), cfg.get_dossier(env, 'PNG')
+    return cfg.get_dossier(env, 'Brut'), cfg.get_dossier(env, 'YCbCr'), cfg.get_dossier(env, 'RGB')
 
 def brut_2_png(path_entree:str, path_sortie:str, convert_to_rgb:bool, env:str):
     dossier_entree = Path(path_entree).glob('**/batch_*')
@@ -19,8 +19,9 @@ def brut_2_png(path_entree:str, path_sortie:str, convert_to_rgb:bool, env:str):
             folder = fichier.split('Brut')[0] + 'PNG/' + fichier.split('Brut/')[1].split('/')[0]
             if not os.path.exists(folder):
                 os.mkdir(folder)
-        new_path_sortie = path_sortie + fichier.split('Brut/')[-1] + ".png"
-        repertoire_sortie = '/'.join(new_path_sortie.split('/')[:-1])
+        #new_path_sortie = path_sortie + fichier.split('Brut/')[-1] + ".png"
+        repertoire_sortie = path_sortie + fichier.split('/')[-1].split('_image')[0]
+        new_path_sortie = repertoire_sortie + '/' + fichier.split('/')[-1] + '.png'
         if not os.path.exists(repertoire_sortie):
             os.makedirs(repertoire_sortie)
         if not os.path.isfile(new_path_sortie):
@@ -44,13 +45,16 @@ def brut_2_png(path_entree:str, path_sortie:str, convert_to_rgb:bool, env:str):
 def main():
     args = YOLO.utils.parse_args_env_cam('Convertit toutes les images brutes en PNGs dans un dossier adjacent.',
                                          genere=True,
-                                         hardnegative=True)
+                                         hardnegative=True,
+                                         testrobot=True)
 
-    env = YOLO.utils.set_config(args, True)
+    env = YOLO.utils.set_config(args, True, True)
     
-    dossier_brut, dossier_PNG = get_dossiers(env)
-    print("De " + dossier_brut + " vers " + dossier_PNG)
-    brut_2_png(dossier_brut, dossier_PNG, True, env)
+    dossier_brut, dossier_YCbCr, dossier_RGB = get_dossiers(env)
+    print("De " + dossier_brut + " vers " + dossier_YCbCr)
+    brut_2_png(dossier_brut, dossier_YCbCr, False, env)
+    print("De " + dossier_brut + " vers " + dossier_RGB)
+    brut_2_png(dossier_brut, dossier_RGB, True, env)
 
 if __name__ == '__main__':
     main()

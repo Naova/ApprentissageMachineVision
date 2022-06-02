@@ -25,7 +25,7 @@ def main():
     env = utils.set_config(args)
     modele = keras.models.load_model(cfg.get_modele_path(env))
     modele.summary()
-    test_data = lire_toutes_les_images('../'+cfg.get_dossier('RobotSansBalle'))
+    test_data = lire_toutes_les_images('../'+cfg.get_dossier('TestRobot'))
 
     max_confidences = []
 

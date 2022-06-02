@@ -11,7 +11,7 @@ sys.path.insert(0,'..')
 import config as cfg
 
 
-def parse_args_env_cam(description: str, genere: bool = False, hardnegative: bool = False):
+def parse_args_env_cam(description: str, genere: bool = False, hardnegative: bool = False, testrobot: bool = False):
     parser = argparse.ArgumentParser(description=description)
 
     action = parser.add_mutually_exclusive_group(required=True)
@@ -25,6 +25,9 @@ def parse_args_env_cam(description: str, genere: bool = False, hardnegative: boo
     if hardnegative:
         action.add_argument('-hn', '--hardnegative', action='store_true',
                         help='Utiliser les photos HardNegative.')
+    if testrobot:
+        action.add_argument('-tr', '--testrobot', action='store_true',
+                        help='Utiliser les photos de tests des modeles de robot.')
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument('-u', '--upper', action='store_true',
                         help='Utiliser la camera du haut.')
@@ -51,6 +54,8 @@ def set_config(args, use_robot: bool = True, use_genere: bool = False):
             return "Genere"
     if args.hardnegative:
         return "HardNegative"
+    if args.testrobot:
+        return "TestRobot"
     raise Exception('Pas d''environnement valide selectionne!')
 
 def draw_rectangle_on_image(input_image, yolo_output, coords):
