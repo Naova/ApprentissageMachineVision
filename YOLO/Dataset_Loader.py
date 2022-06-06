@@ -1,7 +1,6 @@
 import numpy as np
 from pathlib import Path
 import json
-import utils
 import random
 import math
 
@@ -41,14 +40,11 @@ class Entree:
                 new_image[i][j][2] = image[x][y][2]
         return new_image
     def x(self):
-        image_height, image_width = cfg.get_image_resolution(self.env)
+        image = Image.open(self.image_path)
         resized_image_height, resized_image_width = cfg.get_resized_image_resolution()
-        image = np.fromfile(self.image_path, dtype=np.float32)
-        image = np.reshape(image, (image_height, image_width, 3))
-        if resized_image_height != image_height or resized_image_width != image_width:
-            img = Image.fromarray((image*255).astype(np.uint8))
-            img = img.resize((resized_image_width, resized_image_height), Image.NEAREST)
-            image = np.array(img) / 255.
+        if resized_image_height != image.size[1] or resized_image_width != image.size[0]:
+            image = image.resize((resized_image_width, resized_image_height), Image.NEAREST)
+        image = np.array(image) / 255.
         if self.flipper:
             return np.fliplr(image)
         return image
@@ -76,22 +72,21 @@ class Entree:
             
             best_anchor_index = best_anchor(anchors, rayon)
             value[center][3 + best_anchor_index] = 1                         #rayon anchor
-
         return value
 
-def lire_entrees(labels_path:str, brut_path:str, env:str = 'Simulation'):
+def lire_entrees(labels_path:str, data_path:str, env:str = 'Simulation'):
     entrees = []
     with open(labels_path) as fichier:
         labels = json.loads(fichier.read())
     for image_label in labels:
-        fichier_image = brut_path + image_label
+        fichier_image = data_path + image_label
         if cfg.flipper_images:
             entrees.append(Entree(image_label, labels[image_label], fichier_image, True, env))
         entrees.append(Entree(image_label, labels[image_label], fichier_image, False, env))
     return entrees
 
 def lire_toutes_les_images(path:str):
-    dossier = Path(path).glob('*')
+    dossier = Path(path).glob('*/*')
     fichiers = [str(f) for f in dossier]
     entrees = [Entree(f.split('/')[-1], {}, f, False, 'Robot') for f in fichiers]
     entrees += [Entree(f.split('/')[-1], {}, f, True, 'Robot') for f in fichiers]
