@@ -113,9 +113,9 @@ def main():
     env = utils.set_config(args, use_robot=False)
 
     labels = cfg.get_labels_path(env)
-    dossier_brut = cfg.get_dossier(env, 'Brut')
+    dossier_ycbcr = cfg.get_dossier(env, 'YCbCr')
     modele_path = cfg.get_modele_path(env)
-    train_generator, validation_generator, test_data = create_dataset(16, '../'+labels, '../'+dossier_brut, env)
+    train_generator, validation_generator, test_data = create_dataset(16, '../'+labels, '../'+dossier_ycbcr, env)
     if not args.simulation:
         test_data = lire_entrees('../'+cfg.get_labels_path('Robot'), '../'+cfg.get_dossier('Robot'), 'Robot')
         #test_data = lire_toutes_les_images('../'+cfg.get_dossier('RobotSansBalle'))

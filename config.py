@@ -5,9 +5,9 @@ camera = 'upper' # doit etre dans {'upper', 'lower'}
 
 """
 env dans {'Simulation', 'Robot', 'Genere'}
-type_fichier in {'Brut', 'PNG'}
+type_fichier in {'RGB', 'YCbCr'}
 """
-def get_dossier(env='Simulation', type_fichier='Brut'):
+def get_dossier(env='Simulation', type_fichier='YCbCr'):
     return f'Dataset/{env}/{camera}/{type_fichier}/'
 def get_labels_path(env='Simulation'):
     return f'Dataset/{env}/{camera}/labels.json'
@@ -25,6 +25,18 @@ resolutions = {
         'lower': (128, 144),
     },
     'Robot': {
+        'upper': (240, 320),
+        'lower': (120, 160),
+    },
+    'HardNegative': {
+        'upper': (240, 320),
+        'lower': (120, 160),
+    },
+    'NewNegative': {
+        'upper': (240, 320),
+        'lower': (120, 160),
+    },
+    'RobotSansBalle': {
         'upper': (240, 320),
         'lower': (120, 160),
     },
