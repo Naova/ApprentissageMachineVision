@@ -15,8 +15,8 @@ with zipfile.ZipFile('Dataset.zip', 'w', zipfile.ZIP_DEFLATED, compresslevel=9) 
                 print(s)
                 if thing_to_zip == "YCbCr":
                     files = pathlib.Path(f'Dataset/{subfolder}/{camera}/YCbCr/').glob('**/*')
+                    files = [f for f in files]
                     for file in tqdm(files):
                         archive.write(str(file), arcname=str(file))
-                else:
-                    if os.path.exists(s):
-                        archive.write(s)
+                elif os.path.exists(s):
+                    archive.write(s)

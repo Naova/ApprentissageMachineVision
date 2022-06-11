@@ -46,7 +46,7 @@ def main():
     plt.ylim(-0.05, 1.)
     plt.grid()
 
-    plt.savefig(f'tests/{time}.png')
+    plt.savefig(f'tests/{cfg.camera}/{time}.png')
 
     somme = sum([x[2] for x in max_confidences])
 
@@ -70,9 +70,9 @@ def main():
         '80_seuil':seuil(max_confidences, 0.8),
     }
     
-    with open(f'tests/{time}_raw_data.json', 'w') as f:
+    with open(f'tests/{cfg.camera}/{time}_raw_data.json', 'w') as f:
         json.dump(max_confidences, f)
-    with open(f'tests/{time}_stats.json', 'w') as f:
+    with open(f'tests/{cfg.camera}/{time}_stats.json', 'w') as f:
         json.dump(stats, f)
     
     source = cfg.get_modele_path(env)

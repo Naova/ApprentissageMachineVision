@@ -113,7 +113,7 @@ def split_dataset(entrees, batch_size=16, test=True):
 def create_dataset(batch_size, labels_path:str, images_path:str, env:str):
     entrees = lire_entrees(labels_path, images_path, env)
     if env == 'Genere':
-        path = '../' + cfg.get_dossier('HardNegative', 'Brut')
+        path = '../' + cfg.get_dossier('HardNegative', 'YCbCr')
         entrees += lire_toutes_les_images(path)
     train, validation, test = split_dataset(entrees, batch_size, env == 'Simulation')
     return train, validation, test

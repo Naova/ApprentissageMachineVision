@@ -34,12 +34,14 @@ def create_model_upper(shape:tuple, nb_anchors:int):
 
 def create_model_lower(shape:tuple, nb_anchors:int):
     inputs = keras.Input(shape=(*cfg.get_resized_image_resolution(), 3))
-    x = SeparableConv2D(32, kernel(5), kernel(2))(inputs)
+    x = SeparableConv2D(64, kernel(3), kernel(2))(inputs)
     x = LeakyReLU(alpha=0.2)(x)
-    x = SeparableConv2D(32, kernel(3), kernel(2))(x)
+    x = SeparableConv2D(48, kernel(3), kernel(1))(x)
+    x = LeakyReLU(alpha=0.2)(x)
+    x = SeparableConv2D(48, kernel(3), kernel(1))(x)
     x = LeakyReLU(alpha=0.2)(x)
     x = MaxPool2D()(x)
-    x = Conv2D(16, kernel(1), kernel(1))(x)
+    x = Conv2D(64, kernel(1), kernel(1))(x)
     x = LeakyReLU(alpha=0.2)(x)
     x = Conv2D(3 + nb_anchors, kernel(1), kernel(1), activation='sigmoid')(x)
     return keras.Model(inputs=inputs, outputs=x)
