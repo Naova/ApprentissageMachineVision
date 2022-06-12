@@ -61,13 +61,18 @@ def save_stats(confidences_negative, confidences_positive, env):
     y_neg = [x[2] for x in confidences_negative]
     y_pos = [x[2] for x in confidences_positive]
 
-    plt.scatter(range(len(confidences_negative)), y_neg)
-    plt.scatter(range(len(confidences_positive)), y_pos)
+    plt.scatter(range(len(confidences_negative)), y_neg, s=10)
+    plt.scatter(range(len(confidences_positive)), y_pos, s=10)
     plt.rcParams["axes.titlesize"] = 10
     plt.title(f'Niveau de confiance maximal par image du dataset de test.\nEn bleu, les faux positifs et en orange, les vrais positifs.\nCaméra {cfg.camera} {time}')
     plt.xlabel('Images')
     plt.ylabel('Niveau de confiance')
+    #plt.title(f'Maximal confidence level per image from the test dataset.\n{cfg.camera.capitalize()} camera.')
+    #plt.xlabel('Images (sorted)')
+    #plt.ylabel('Max confidence level')
     plt.ylim(-0.05, 1.)
+    plt.legend(['Images sans balle', 'Images avec balles'])
+    #plt.legend(['Images with no ball', 'Images with balls'])
     plt.grid()
 
     plt.savefig(f'tests/{cfg.camera}/{time}.png')
@@ -87,7 +92,7 @@ def main():
     modele = keras.models.load_model(cfg.get_modele_path(env))
     modele.summary()
     test_data_negative = lire_toutes_les_images('../'+cfg.get_dossier('TestRobot'))
-    test_data_positive = lire_entrees('../'+cfg.get_labels_path('Robot').replace('upp', 'low'), '../'+cfg.get_dossier('Robot').replace('upp', 'low'), env='Robot')
+    test_data_positive = lire_entrees('../'+cfg.get_labels_path('Robot'), '../'+cfg.get_dossier('Robot'), env='Robot')
 
     max_confidences_negative = test_model(modele, test_data_negative)
     max_confidences_positive = test_model(modele, test_data_positive)
