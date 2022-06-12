@@ -5,7 +5,7 @@ camera = 'upper' # doit etre dans {'upper', 'lower'}
 
 """
 env dans {'Simulation', 'Robot', 'Genere'}
-type_fichier in {'RGB', 'YCbCr'}
+type_fichier dans {'RGB', 'YCbCr'}
 """
 def get_dossier(env='Simulation', type_fichier='YCbCr'):
     return f'Dataset/{env}/{camera}/{type_fichier}/'

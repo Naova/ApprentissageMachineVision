@@ -25,6 +25,8 @@ def parse_args_env_cam(description: str, genere: bool = False, hardnegative: boo
     if hardnegative:
         action.add_argument('-hn', '--hardnegative', action='store_true',
                         help='Utiliser les photos HardNegative.')
+        action.add_argument('-nn', '--newnegative', action='store_true',
+                        help='Utiliser les photos NewNegative.')
     if testrobot:
         action.add_argument('-tr', '--testrobot', action='store_true',
                         help='Utiliser les photos de tests des modeles de robot.')
@@ -54,6 +56,8 @@ def set_config(args, use_robot: bool = True, use_genere: bool = False):
             return "Genere"
     if args.hardnegative:
         return "HardNegative"
+    if args.newnegative:
+        return "NewNegative"
     if args.testrobot:
         return "TestRobot"
     raise Exception('Pas d''environnement valide selectionne!')

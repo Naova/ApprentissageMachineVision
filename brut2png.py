@@ -11,14 +11,14 @@ def get_dossiers(env='Simulation'):
     return cfg.get_dossier(env, 'Brut'), cfg.get_dossier(env, 'YCbCr'), cfg.get_dossier(env, 'RGB')
 
 def brut_2_png(path_entree:str, path_sortie:str, convert_to_rgb:bool, env:str):
-    dossier_entree = Path(path_entree).glob('**/batch_*')
+    dossier_entree = Path(path_entree).glob('**/*/batch_*')
     fichiers = [str(x) for x in dossier_entree if 'label' not in str(x)]
     image_height, image_width = cfg.get_image_resolution()
     for fichier in tqdm(fichiers):
-        if '/' in fichier.split('Brut/')[1]:
-            folder = fichier.split('Brut')[0] + 'PNG/' + fichier.split('Brut/')[1].split('/')[0]
-            if not os.path.exists(folder):
-                os.mkdir(folder)
+        #if '/' in fichier.split('Brut/')[1]:
+        #    folder = fichier.split('Brut')[0] + 'YCbCr/' + fichier.split('Brut/')[1].split('/')[0]
+        #    if not os.path.exists(folder):
+        #        os.mkdir(folder)
         #new_path_sortie = path_sortie + fichier.split('Brut/')[-1] + ".png"
         repertoire_sortie = path_sortie + fichier.split('/')[-1].split('_image')[0]
         new_path_sortie = repertoire_sortie + '/' + fichier.split('/')[-1] + '.png'
