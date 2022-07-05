@@ -6,9 +6,9 @@ def main():
     with open('stats_modeles_confidence_upper.json', 'r') as f:
         stats = json.load(f)
     
-    pourcent_1 = 0.02
-    pourcent_2 = 0.015
-    pourcent_3 = 0.01
+    pourcent_1 = "0.02"
+    pourcent_2 = "0.015"
+    pourcent_3 = "0.01"
     
     keys = [s for s in stats]
     keys = sorted(keys, key=lambda x:stats[x][pourcent_1]['vrai_positifs_acceptes'])
