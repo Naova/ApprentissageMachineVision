@@ -108,7 +108,6 @@ def get_anchors():
             __yolo_anchors = json.loads(anchors_file.read())
         return __yolo_anchors
 
-flipper_images = True
 retrain = True
 
 def get_modele_path(env='Simulation'):

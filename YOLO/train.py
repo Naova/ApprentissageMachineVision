@@ -22,7 +22,7 @@ def create_model_upper(shape:tuple, nb_anchors:int):
     x = LeakyReLU(alpha=0.2)(x)
     x = SeparableConv2D(64, kernel(3), kernel(1), padding='same')(x)
     x = LeakyReLU(alpha=0.2)(x)
-    x = SeparableConv2D(64, kernel(3), kernel(2))(x)
+    x = SeparableConv2D(64, kernel(3), kernel(2), padding='same')(x)
     x = LeakyReLU(alpha=0.2)(x)
     x = MaxPool2D()(x)
     x = SeparableConv2D(64, kernel(3), kernel(1), padding='same')(x)
@@ -36,9 +36,11 @@ def create_model_lower(shape:tuple, nb_anchors:int):
     inputs = keras.Input(shape=(*cfg.get_resized_image_resolution(), 3))
     x = SeparableConv2D(64, kernel(3), kernel(2))(inputs)
     x = LeakyReLU(alpha=0.2)(x)
-    x = SeparableConv2D(48, kernel(3), kernel(1))(x)
+    x = SeparableConv2D(48, kernel(3), kernel(1), padding='same')(x)
     x = LeakyReLU(alpha=0.2)(x)
-    x = SeparableConv2D(48, kernel(3), kernel(1))(x)
+    x = SeparableConv2D(48, kernel(3), kernel(2), padding='same')(x)
+    x = LeakyReLU(alpha=0.2)(x)
+    x = SeparableConv2D(48, kernel(3), kernel(1), padding='same')(x)
     x = LeakyReLU(alpha=0.2)(x)
     x = MaxPool2D()(x)
     x = Conv2D(64, kernel(1), kernel(1))(x)
@@ -121,7 +123,7 @@ def main():
     if not args.simulation:
         test_data = lire_entrees('../'+cfg.get_labels_path('Robot'), '../'+cfg.get_dossier('Robot'), 'Robot')
         #test_data = lire_toutes_les_images('../'+cfg.get_dossier('RobotSansBalle'))
-    train(train_generator, validation_generator, test_data, modele_path, True)
+    train(train_generator, validation_generator, test_data, modele_path, False)
 
 
 if __name__ == '__main__':
