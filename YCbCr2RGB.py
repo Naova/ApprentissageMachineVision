@@ -12,7 +12,7 @@ def get_dossiers(env='Simulation'):
 
 def ycbcr_2_rgb(path_entree, path_sortie, env):
     dossier_entree = Path(path_entree).glob('**/*/*')
-    fichiers = [str(x) for x in dossier_entree]
+    fichiers = [x.as_posix() for x in dossier_entree]
     for fichier in tqdm(fichiers):
         dossier_sortie = fichier[:len(fichier)-fichier[::-1].index('/')].replace('YCbCr', 'RGB')
         if not os.path.exists(dossier_sortie):

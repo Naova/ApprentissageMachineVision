@@ -80,8 +80,7 @@ def lire_entrees(labels_path:str, data_path:str, env:str = 'Simulation'):
         labels = json.loads(fichier.read())
     for image_label in labels:
         fichier_image = data_path + image_label
-        if cfg.flipper_images:
-            entrees.append(Entree(image_label, labels[image_label], fichier_image, True, env))
+        entrees.append(Entree(image_label, labels[image_label], fichier_image, True, env))
         entrees.append(Entree(image_label, labels[image_label], fichier_image, False, env))
     return entrees
 

@@ -26,12 +26,10 @@ def main():
         entree_x = entree.x()
         prediction = modele.predict(np.array([entree_x]))[0]
         max_confidence = prediction[:,:,0].max().astype('float')
-        if max_confidence > 0.3:
+        if max_confidence > 0.2:
             max_confidences.append((entree, max_confidence))
     
     print(len(max_confidences))
-
-    breakpoint()
 
     destination = '../'+cfg.get_dossier('HardNegative')
 
@@ -46,7 +44,12 @@ def main():
             images.append(entree.nom)
         except:
             pass
-    with open('changes.json', 'w') as f:
+    name = 'changes/changes.json'
+    n = 1
+    while os.path.exists(name):
+        name = f'changes/changes{n}.json'
+        n += 1
+    with open(name, 'w') as f:
         json.dump(images, f)
 
 if __name__ == '__main__':
