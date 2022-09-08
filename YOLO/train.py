@@ -110,7 +110,7 @@ def train_model(modele, train_generator, validation_generator):
     metrics = [myBinaryAccuracy(threshold=0.2), myFalsePositives(thresholds=0.5), myFalseNegatives(0.5), myPrecision()]
     modele.compile(optimizer=keras.optimizers.Adam(), loss='binary_crossentropy', metrics=metrics)
     es = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.00001, patience=10, restore_best_weights=True)
-    modele.fit(train_generator, validation_data=validation_generator, epochs=40, callbacks=[es])
+    modele.fit(train_generator, validation_data=validation_generator, epochs=100, callbacks=[es])
     return modele
 
 def display_model_prediction(prediction, wanted_prediction, prediction_on_image, wanted_output, save_to_file_name = None):
