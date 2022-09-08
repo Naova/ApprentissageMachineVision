@@ -40,6 +40,14 @@ def change_variable_access_method(full_text: str, variable: str):
     full_text = full_text[:var_index] + end_of_text.replace('][', f'*{shape[2]} + ', 1)
     return full_text
 
+def add_warning_removal(full_text: str):
+    full_text = """#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-braces"
+#pragma clang diagnostic ignored "-Wconversion"
+""" + full_text + "\n#pragma clang diagnostic pop\n"
+
+    return full_text
+
 def change_arguments_to_simple_pointers(full_text: str):
     """
     Les parametres de la fonction principale sont declares comme des tableaux a trois dimensions (par exemple: float x_0[160][120][3])
@@ -73,6 +81,7 @@ def fix_file(file_path:str):
     
     full_text = remove_unnecessary_code(full_text)
     full_text = change_arguments_to_simple_pointers(full_text)
+    full_text = add_warning_removal(full_text)
     
     with open(file_path, 'w') as f:
         f.write(full_text)
