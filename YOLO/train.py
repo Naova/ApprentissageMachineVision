@@ -5,34 +5,39 @@ import matplotlib.pyplot as plt
 import numpy as np
 from time import process_time
 
+from typing import Any
+
 import sys
 sys.path.insert(0,'..')
 
 import config as cfg
-from Dataset_Loader import create_dataset, lire_entrees, lire_toutes_les_images
+from Dataset_Loader import create_dataset, lire_entrees
 import utils
 
 
 def kernel(x):
     return (x, x)
 
-def create_model_upper(shape:tuple, nb_anchors:int):
+def create_model_upper():
     inputs = keras.Input(shape=(*cfg.get_resized_image_resolution(), 3))
-    x = SeparableConv2D(64, kernel(3), kernel(2))(inputs)
-    x = LeakyReLU(alpha=0.2)(x)
-    x = SeparableConv2D(64, kernel(3), kernel(1), padding='same')(x)
-    x = LeakyReLU(alpha=0.2)(x)
-    x = SeparableConv2D(64, kernel(3), kernel(2), padding='same')(x)
-    x = LeakyReLU(alpha=0.2)(x)
-    x = MaxPool2D()(x)
-    x = SeparableConv2D(64, kernel(3), kernel(1), padding='same')(x)
-    x = LeakyReLU(alpha=0.2)(x)
-    x = Conv2D(64, kernel(1), kernel(1))(x)
-    x = LeakyReLU(alpha=0.2)(x)
-    x = Conv2D(3 + nb_anchors, kernel(1), kernel(1), activation='sigmoid')(x)
+    x = SeparableConv2D(16, kernel(3), kernel(2), padding='same', bias_initializer='random_normal')(inputs)
+    x = LeakyReLU(alpha=0.1)(x)
+    x = Conv2D(16, kernel(3), kernel(1), padding='same', bias_initializer='random_normal')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    x = SeparableConv2D(24, kernel(3), kernel(2), padding='same', bias_initializer='random_normal')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    x = Conv2D(24, kernel(3), kernel(1), padding='same', bias_initializer='random_normal')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    x = SeparableConv2D(32, kernel(3), kernel(2), padding='same', bias_initializer='random_normal')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    x = SeparableConv2D(32, kernel(3), kernel(1), padding='same', bias_initializer='random_normal')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    x = Conv2D(32, kernel(1), kernel(1), bias_initializer='random_normal')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    x = Conv2D(5 + len(cfg.get_anchors()), kernel(1), kernel(1), activation='sigmoid', bias_initializer='random_normal')(x)
     return keras.Model(inputs=inputs, outputs=x)
 
-def create_model_lower(shape:tuple, nb_anchors:int):
+def create_model_lower():
     inputs = keras.Input(shape=(*cfg.get_resized_image_resolution(), 3))
     x = SeparableConv2D(64, kernel(3), kernel(2))(inputs)
     x = LeakyReLU(alpha=0.2)(x)
@@ -45,18 +50,31 @@ def create_model_lower(shape:tuple, nb_anchors:int):
     x = MaxPool2D()(x)
     x = Conv2D(64, kernel(1), kernel(1))(x)
     x = LeakyReLU(alpha=0.2)(x)
-    x = Conv2D(3 + nb_anchors, kernel(1), kernel(1), activation='sigmoid')(x)
+    x = Conv2D(5 + len(cfg.get_anchors()), kernel(1), kernel(1), activation='sigmoid')(x)
     return keras.Model(inputs=inputs, outputs=x)
 
-def create_model(shape:tuple, nb_anchors:int):
+def create_model():
     if cfg.camera == 'upper':
-        return create_model_upper(shape, nb_anchors)
+        return create_model_upper()
     else:
-        return create_model_lower(shape, nb_anchors)
+        return create_model_lower()
 
 def train_model(modele, train_generator, validation_generator):
-    modele.compile(optimizer=keras.optimizers.Adam(), loss='binary_crossentropy')
-    es = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.00001, patience=2, restore_best_weights=True)
+    class myBinaryAccuracy(keras.metrics.BinaryAccuracy):
+        def __call__(self, *args: Any, **kwds: Any) -> Any:
+            return super()(*args, **kwds, sample_weight=[1, 0, 0, 0, 0, 0, 0, 0])
+    class myFalsePositives(keras.metrics.FalsePositives):
+        def __call__(self, *args: Any, **kwds: Any) -> Any:
+            return super().__call__(*args, **kwds, sample_weight=[1, 0, 0, 0, 0, 0, 0, 0])
+    class myFalseNegatives(keras.metrics.FalseNegatives):
+        def __call__(self, *args: Any, **kwds: Any) -> Any:
+            return super().__call__(*args, **kwds, sample_weight=[1, 0, 0, 0, 0, 0, 0, 0])
+    class myPrecision(keras.metrics.Precision):
+        def __call__(self, *args: Any, **kwds: Any) -> Any:
+            return super().__call__(*args, **kwds, sample_weight=[1, 0, 0, 0, 0, 0, 0, 0])
+    metrics = [myBinaryAccuracy(threshold=0.2), myFalsePositives(thresholds=0.5), myFalseNegatives(0.5), myPrecision()]
+    modele.compile(optimizer=keras.optimizers.Adam(), loss='binary_crossentropy', metrics=metrics)
+    es = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.00001, patience=10, restore_best_weights=True, mode='max')
     modele.fit(train_generator, validation_data=validation_generator, epochs=40, callbacks=[es])
     return modele
 
@@ -89,10 +107,8 @@ def generate_prediction_image(prediction, x_test, y_test, prediction_number = No
     display_model_prediction(prediction[:,:,0], y_test[:,:,0], prediction_on_image, wanted_output, 'prediction_' + str(prediction_number) + '.png')
 
 def train(train_generator, validation_generator, test_data, modele_path, test=True):
-    resized_image_height, resized_image_width = cfg.get_resized_image_resolution()
-    shape = (resized_image_height, resized_image_width, 3)
     if cfg.retrain:
-        modele = create_model(shape, cfg.get_nb_anchors())
+        modele = create_model()
         modele.summary()
         cfg.set_yolo_resolution(modele.output_shape[1], modele.output_shape[2])
         modele = train_model(modele, train_generator, validation_generator)
@@ -123,7 +139,7 @@ def main():
     if not args.simulation:
         test_data = lire_entrees('../'+cfg.get_labels_path('Robot'), '../'+cfg.get_dossier('Robot'), 'Robot')
         #test_data = lire_toutes_les_images('../'+cfg.get_dossier('RobotSansBalle'))
-    train(train_generator, validation_generator, test_data, modele_path, False)
+    train(train_generator, validation_generator, test_data, modele_path, True)
 
 
 if __name__ == '__main__':

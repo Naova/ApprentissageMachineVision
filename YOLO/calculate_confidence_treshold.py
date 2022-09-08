@@ -12,10 +12,7 @@ import utils
 from Dataset_Loader import lire_toutes_les_images, lire_entrees
 from test_robot_model import test_model
 
-def test_datapoints(y_neg, y_pos, negative_weight=20):
-    pourcentage_pos = []
-    pourcentage_neg = []
-    combined = []
+def test_datapoints(y_neg, y_pos):
     nb_points = 1000
     min_reached1, min_reached2 = False, False
 
@@ -62,13 +59,12 @@ def test_datapoints(y_neg, y_pos, negative_weight=20):
 
 def main():
     args = utils.parse_args_env_cam('Test the yolo model on a bunch of test images and output stats.')
-    env = utils.set_config(args)
 
     test_data_negative = lire_toutes_les_images('../'+cfg.get_dossier('TestRobot'))
     test_data_positive = lire_toutes_les_images('../'+cfg.get_dossier('TestRobotPositive'))
     test_data_positive += lire_entrees('../'+cfg.get_labels_path('Robot'), '../'+cfg.get_dossier('Robot'), env='Robot')
 
-    modeles = Path(f'tests/{cfg.camera}2/').glob('*.h5')
+    modeles = Path(f'tests/{cfg.camera}/').glob('*.h5')
     modeles = [m for m in modeles]
     for modele_path in tqdm.tqdm(modeles):
         print(f'loading {modele_path}')
@@ -89,7 +85,7 @@ def main():
         with open(str(modele_path).replace('.h5', '.json'), 'w') as f:
             json.dump(stats_brutes, f)
 
-        new_stats = test_datapoints(y_neg, y_pos, 10)
+        new_stats = test_datapoints(y_neg, y_pos)
 
         with open(f'stats_modeles_confidence_{cfg.camera}.json', 'r') as f:
             stats = json.load(f)

@@ -82,8 +82,8 @@ def get_yolo_resolution():
     else:
         return lower_yolo_height, lower_yolo_width
 
-yolo_nb_anchors_upper = 5 # + 3
-yolo_nb_anchors_lower = 4 # + 3
+yolo_nb_anchors_upper = 3
+yolo_nb_anchors_lower = 3
 
 def get_nb_anchors():
     if camera == 'upper':

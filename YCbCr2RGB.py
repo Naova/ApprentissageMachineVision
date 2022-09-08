@@ -11,7 +11,7 @@ def get_dossiers(env='Simulation'):
     return cfg.get_dossier(env, 'YCbCr'), cfg.get_dossier(env, 'RGB')
 
 def ycbcr_2_rgb(path_entree, path_sortie, env):
-    dossier_entree = Path(path_entree).glob('**/*/*')
+    dossier_entree = Path(path_entree).glob('**/*/*/*')
     fichiers = [x.as_posix() for x in dossier_entree]
     for fichier in tqdm(fichiers):
         dossier_sortie = fichier[:len(fichier)-fichier[::-1].index('/')].replace('YCbCr', 'RGB')
@@ -34,7 +34,7 @@ def main():
                                          genere=True,
                                          hardnegative=True)
 
-    env = YOLO.utils.set_config(args, True)
+    env = YOLO.utils.set_config(args, True, True)
     
     dossier_YCBCr, dossier_RGB = get_dossiers(env)
     print("De " + dossier_YCBCr + " vers " + dossier_RGB)

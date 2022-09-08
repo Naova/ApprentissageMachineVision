@@ -3,6 +3,7 @@ from pathlib import Path
 import json
 import random
 import math
+import os
 
 from PIL import Image
 
@@ -45,6 +46,7 @@ class Entree:
         if resized_image_height != image.size[1] or resized_image_width != image.size[0]:
             image = image.resize((resized_image_width, resized_image_height), Image.NEAREST)
         image = np.array(image) / 255.
+            
         if self.flipper:
             return np.fliplr(image)
         return image
@@ -52,7 +54,7 @@ class Entree:
         image_height, image_width = cfg.get_image_resolution()
         yolo_height, yolo_width = cfg.get_yolo_resolution()
         anchors = cfg.get_anchors()
-        value = np.zeros((yolo_height, yolo_width, 3 + len(anchors)))
+        value = np.zeros((yolo_height, yolo_width, 5 + len(anchors)))
         for balle in self.balles:
             width = balle['right'] - balle['left']
             height = balle['bottom'] - balle['top']
@@ -65,13 +67,20 @@ class Entree:
             center_y = int(y / image_height * yolo_height)
             center = (center_y, center_x)
 
-            value[center][0] = 1                                             #presence d'objet
-            value[center][1] = x / image_width * yolo_width - center_x       #center_x
-            value[center][2] = y / image_height * yolo_height - center_y     #center_y
+            value[center][0] = 1 #presence d'objet
+            #classification pour position x-y
+            if x / image_width * yolo_width - center_x < 0.5:
+                value[center][1] = 1
+            else:
+                value[center][2] = 1
+            if y / image_height * yolo_height - center_y < 0.5:
+                value[center][3] = 1
+            else:
+                value[center][4] = 1
+            #classification pour la taille de la balle
             rayon = max(width, height) / image_width / 2
-            
             best_anchor_index = best_anchor(anchors, rayon)
-            value[center][3 + best_anchor_index] = 1                         #rayon anchor
+            value[center][5 + best_anchor_index] = 1 #rayon anchor
         return value
 
 def lire_entrees(labels_path:str, data_path:str, env:str = 'Simulation'):
@@ -80,8 +89,9 @@ def lire_entrees(labels_path:str, data_path:str, env:str = 'Simulation'):
         labels = json.loads(fichier.read())
     for image_label in labels:
         fichier_image = data_path + image_label
-        entrees.append(Entree(image_label, labels[image_label], fichier_image, True, env))
-        entrees.append(Entree(image_label, labels[image_label], fichier_image, False, env))
+        if os.path.exists(fichier_image):
+            entrees.append(Entree(image_label, labels[image_label], fichier_image, True, env))
+            entrees.append(Entree(image_label, labels[image_label], fichier_image, False, env))
     return entrees
 
 def lire_toutes_les_images(path:str):
