@@ -17,6 +17,8 @@ def ycbcr_2_rgb(path_entree, path_sortie, env):
         dossier_sortie = fichier[:len(fichier)-fichier[::-1].index('/')].replace('YCbCr', 'RGB')
         if not os.path.exists(dossier_sortie):
             os.makedirs(dossier_sortie)
+        if os.path.exists(fichier.replace('YCbCr', 'RGB')):
+            continue
         image = Image.open(fichier)
 
         arr = np.array(image).astype('float')
