@@ -95,51 +95,11 @@ def create_model(env):
             return create_model_lower_simulation()
 
 def train_model(modele, train_generator, validation_generator):
-    class myBinaryAccuracy(keras.metrics.BinaryAccuracy):
-        def __call__(self, *args: Any, **kwds: Any) -> Any:
-            return super()(*args, **kwds, sample_weight=[1, 0, 0, 0, 0, 0, 0, 0])
-    class myFalsePositives(keras.metrics.FalsePositives):
-        def __call__(self, *args: Any, **kwds: Any) -> Any:
-            return super().__call__(*args, **kwds, sample_weight=[1, 0, 0, 0, 0, 0, 0, 0])
-    class myFalseNegatives(keras.metrics.FalseNegatives):
-        def __call__(self, *args: Any, **kwds: Any) -> Any:
-            return super().__call__(*args, **kwds, sample_weight=[1, 0, 0, 0, 0, 0, 0, 0])
-    class myPrecision(keras.metrics.Precision):
-        def __call__(self, *args: Any, **kwds: Any) -> Any:
-            return super().__call__(*args, **kwds, sample_weight=[1, 0, 0, 0, 0, 0, 0, 0])
-    metrics = [myBinaryAccuracy(threshold=0.2), myFalsePositives(thresholds=0.5), myFalseNegatives(0.5), myPrecision()]
-    modele.compile(optimizer=keras.optimizers.Adam(), loss='binary_crossentropy', metrics=metrics)
+    modele.compile(optimizer=keras.optimizers.Adam(), loss='binary_crossentropy')
     es = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.00001, patience=10, restore_best_weights=True)
-    modele.fit(train_generator, validation_data=validation_generator, epochs=100, callbacks=[es])
+    mc = keras.callbacks.ModelCheckpoint('yolo_modele_robot_upper_{epoch:02d}.h5', monitor='val_loss')
+    modele.fit(train_generator, validation_data=validation_generator, epochs=100, callbacks=[es, mc])
     return modele
-
-def display_model_prediction(prediction, wanted_prediction, prediction_on_image, wanted_output, save_to_file_name = None):
-    fig = plt.figure()
-    fig.add_subplot(2, 2, 1)
-    plt.imshow(prediction)
-    plt.title('model output')
-    plt.colorbar(orientation='horizontal')
-    fig.add_subplot(2, 2, 2)
-    plt.imshow(wanted_prediction)
-    plt.title('ground truth')
-    plt.colorbar(orientation='horizontal')
-    fig.add_subplot(2, 2, 3)
-    plt.imshow(prediction_on_image)
-    plt.title('model output on image')
-    fig.add_subplot(2, 2, 4)
-    plt.imshow(wanted_output)
-    plt.title('ground truth on image')
-    if save_to_file_name:
-        plt.savefig('predictions/' + save_to_file_name, dpi=300)
-    plt.show()
-
-def generate_prediction_image(prediction, x_test, y_test, prediction_number = None):
-    coords = utils.n_max_coord(prediction[:,:,0], 1)
-    #coords = utils.non_max_suppression(prediction)
-    prediction_on_image = utils.draw_rectangle_on_image(utils.ycbcr2rgb(x_test.copy()), prediction, coords)
-    coords = utils.treshold_coord(y_test[:,:,0])
-    wanted_output = utils.draw_rectangle_on_image(utils.ycbcr2rgb(x_test.copy()), y_test, coords)
-    display_model_prediction(prediction[:,:,0], y_test[:,:,0], prediction_on_image, wanted_output, 'prediction_' + str(prediction_number) + '.png')
 
 def train(train_generator, validation_generator, test_data, modele_path, env, test=True):
     if cfg.retrain:
@@ -161,7 +121,7 @@ def train(train_generator, validation_generator, test_data, modele_path, env, te
             prediction = modele.predict(np.array([entree_x]))[0]
             stop = process_time()
             print(entree.nom + ' : ', stop - start)
-            generate_prediction_image(prediction, entree_x, entree.y(), i)
+            utils.generate_prediction_image(prediction, entree_x, entree.y(), i)
 
 def main():
     args = utils.parse_args_env_cam('Train a yolo model to detect balls on an image.')

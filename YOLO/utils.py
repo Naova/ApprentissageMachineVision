@@ -116,47 +116,31 @@ def display_yolo_rectangles(input_image, yolo_output):
     plt.imshow(input_image)
     plt.show()
 
-def non_max_suppression(prediction: np.array):
-    #treshold
-    coords = treshold_coord(prediction[:,:,0], 0.2)
 
-    resized_image_height, resized_image_width = cfg.get_resized_image_resolution()
-    yolo_height, yolo_width = cfg.get_yolo_resolution()
-    ratio_x = resized_image_width / yolo_width
-    ratio_y = resized_image_height / yolo_height
+def display_model_prediction(prediction, wanted_prediction, prediction_on_image, wanted_output, save_to_file_name = None):
+    fig = plt.figure()
+    fig.add_subplot(2, 2, 1)
+    plt.imshow(prediction)
+    plt.title('model output')
+    plt.colorbar(orientation='horizontal')
+    fig.add_subplot(2, 2, 2)
+    plt.imshow(wanted_prediction)
+    plt.title('ground truth')
+    plt.colorbar(orientation='horizontal')
+    fig.add_subplot(2, 2, 3)
+    plt.imshow(prediction_on_image)
+    plt.title('model output on image')
+    fig.add_subplot(2, 2, 4)
+    plt.imshow(wanted_output)
+    plt.title('ground truth on image')
+    if save_to_file_name:
+        plt.savefig('predictions/' + save_to_file_name, dpi=300)
+    plt.show()
 
-    boxes = np.empty((0, 5))
-    #define boxes
-    for i, j in zip(coords[0], coords[1]):
-        confidence = prediction[i,j,0]
-        anchor = cfg.get_anchors()[np.where(prediction==max(prediction[i,j,3:]))[2][0]-3]
-        rayon = anchor * resized_image_width
-        center_x = (i + prediction[i,j,1]) * ratio_x
-        center_y = (j + prediction[i,j,2]) * ratio_y
-        left = int(center_x - rayon)
-        right = int(center_x + rayon)
-        top = int(center_y - rayon)
-        bottom = int(center_y + rayon)
-        box = [confidence, left, top, right, bottom]
-        boxes = np.concatenate((boxes, np.array([box])), axis=0)
+def generate_prediction_image(prediction, x_test, y_test, prediction_number = None):
+    coords = n_max_coord(prediction[:,:,0], 1)
+    prediction_on_image = draw_rectangle_on_image(ycbcr2rgb(x_test.copy()), prediction, coords)
+    coords = treshold_coord(y_test[:,:,0])
+    wanted_output = draw_rectangle_on_image(ycbcr2rgb(x_test.copy()), y_test, coords)
+    display_model_prediction(prediction[:,:,0], y_test[:,:,0], prediction_on_image, wanted_output, 'prediction_' + str(prediction_number) + '.png')
 
-    #merge NMS
-    nb_boxes = len(boxes)
-    for i in range(nb_boxes):
-        if i >= len(boxes):
-            break
-        box1 = boxes[i]
-        for j in range(nb_boxes):
-            if i == j:
-                continue
-            if j >= len(boxes):
-                break
-            box2 = boxes[j]
-            #check overlap
-            
-            #merge
-
-            #remove boxes
-    breakpoint()
-    return coords
-    
