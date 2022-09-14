@@ -33,7 +33,7 @@ def change_variable_access_method(full_text: str, variable: str):
         second_occurence = full_text.split(variable)[2]
         indice_name = second_occurence.split('][')[1]
         value = int(full_text.split(indice_name+' <')[1].split(';')[0])
-        shape = (-1, value, cfg.get_nb_anchors() + 3)
+        shape = (-1, value, 5 + cfg.get_nb_anchors())
     end_of_text = full_text[var_index:]
     full_text = full_text[:var_index] + end_of_text.replace('][', f'*{shape[1]}*{shape[2]} + ', 1)
     end_of_text = full_text[var_index:]
