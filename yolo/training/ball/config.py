@@ -3,6 +3,8 @@ import os
 
 import yolo.config as cfg
 
+get_modele_path = cfg.get_modele_path
+
 #resolution de l'image d'entree
 resolutions = {
     'Simulation': {
