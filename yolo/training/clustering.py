@@ -1,6 +1,4 @@
-import sys
-sys.path.insert(0,'..')
-import config as cfg
+import yolo.training.ball.config as cfg
 
 import json
 import random
@@ -52,7 +50,7 @@ def kmean(population, k = 10):
 def main(camera):
     cfg.camera = camera
     
-    rayons = read_rayons('../' + cfg.get_labels_path('Simulation'))
+    rayons = read_rayons(cfg.get_labels_path('Simulation'))
     anchors = kmean(rayons, cfg.get_nb_anchors())
     rayons.sort()
     with open('rayons.csv', 'w') as f:

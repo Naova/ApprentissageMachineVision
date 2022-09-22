@@ -1,18 +1,13 @@
 import tensorflow.keras as keras
 from tensorflow.keras.layers import Conv2D, MaxPool2D, SeparableConv2D, LeakyReLU
 
-import matplotlib.pyplot as plt
 import numpy as np
 from time import process_time
 
-from typing import Any
-
-import sys
-sys.path.insert(0,'..')
-
-import config as cfg
-from Dataset_Loader import create_dataset, lire_entrees
-import utils
+import yolo.training.ball.config as cfg
+from yolo.training.dataset_loader import create_dataset, lire_entrees
+import yolo.utils.image_processing as image_processing
+import yolo.utils.args_parser as args_parser
 
 
 def kernel(x):
@@ -97,7 +92,7 @@ def create_model(env):
 def train_model(modele, train_generator, validation_generator):
     modele.compile(optimizer=keras.optimizers.Adam(), loss='binary_crossentropy')
     es = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.00001, patience=10, restore_best_weights=True)
-    mc = keras.callbacks.ModelCheckpoint('yolo_modele_robot_upper_{epoch:02d}.h5', monitor='val_loss')
+    mc = keras.callbacks.ModelCheckpoint('modele_robot_upper_{epoch:02d}.h5', monitor='val_loss')
     modele.fit(train_generator, validation_data=validation_generator, epochs=100, callbacks=[es, mc])
     return modele
 
@@ -121,19 +116,19 @@ def train(train_generator, validation_generator, test_data, modele_path, env, te
             prediction = modele.predict(np.array([entree_x]))[0]
             stop = process_time()
             print(entree.nom + ' : ', stop - start)
-            utils.generate_prediction_image(prediction, entree_x, entree.y(), i)
+            image_processing.generate_prediction_image(prediction, entree_x, entree.y(), i)
 
 def main():
-    args = utils.parse_args_env_cam('Train a yolo model to detect balls on an image.')
-    env = utils.set_config(args, use_robot=False)
+    args = args_parser.parse_args_env_cam('Train a yolo model to detect balls on an image.')
+    env = args_parser.set_config(args, use_robot=False)
 
     labels = cfg.get_labels_path(env)
     dossier_ycbcr = cfg.get_dossier(env, 'YCbCr')
     modele_path = cfg.get_modele_path(env)
-    train_generator, validation_generator, test_data = create_dataset(16, '../'+labels, '../'+dossier_ycbcr, env)
+    train_generator, validation_generator, test_data = create_dataset(16, labels, dossier_ycbcr, env)
     if not args.simulation:
-        test_data = lire_entrees('../'+cfg.get_labels_path('Robot'), '../'+cfg.get_dossier('Robot'), 'Robot')
-        #test_data = lire_toutes_les_images('../'+cfg.get_dossier('RobotSansBalle'))
+        test_data = lire_entrees(cfg.get_labels_path('Robot'), cfg.get_dossier('Robot'), 'Robot')
+        #test_data = lire_toutes_les_images(cfg.get_dossier('RobotSansBalle'))
     train(train_generator, validation_generator, test_data, modele_path, env, True)
 
 

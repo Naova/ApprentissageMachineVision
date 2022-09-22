@@ -7,12 +7,10 @@ import tqdm
 import matplotlib.pyplot as plt
 import shutil
 from datetime import datetime
-import sys
-sys.path.insert(0,'..')
 
-import config as cfg
-import utils
-from Dataset_Loader import lire_toutes_les_images, lire_entrees
+import yolo.config as cfg
+import yolo.utils.args_parser as args_parser
+from yolo.training.dataset_loader import lire_toutes_les_images, lire_entrees
 
 
 def test_model(modele, test_data):
@@ -31,7 +29,7 @@ def save_stats(confidences_negative, confidences_positive, env):
     y_neg = [x[2] for x in confidences_negative]
     y_pos = [x[2] for x in confidences_positive]
 
-    treshold = 0.25
+    treshold = 0.8
 
     false_negative = [x for x in y_pos if x <= treshold]
     true_negative = [x for x in y_neg if x <= treshold]
@@ -87,13 +85,13 @@ def save_stats(confidences_negative, confidences_positive, env):
     return somme_neg, somme_pos
 
 def main():
-    args = utils.parse_args_env_cam('Test the yolo model on a bunch of test images and output stats.')
-    env = utils.set_config(args)
+    args = args_parser.parse_args_env_cam('Test the yolo model on a bunch of test images and output stats.')
+    env = args_parser.set_config(args)
     modele = keras.models.load_model(cfg.get_modele_path(env))
     modele.summary()
-    test_data_positive = lire_toutes_les_images('../'+cfg.get_dossier('TestRobotPositive'))
-    test_data_negative = lire_toutes_les_images('../'+cfg.get_dossier('TestRobot'))
-    test_data_positive += lire_entrees('../'+cfg.get_labels_path('Robot'), '../'+cfg.get_dossier('Robot'), env='Robot')
+    test_data_positive = lire_toutes_les_images(cfg.get_dossier('TestRobotPositive'))
+    test_data_negative = lire_toutes_les_images(cfg.get_dossier('TestRobot'))
+    test_data_positive += lire_entrees(cfg.get_labels_path('Robot'), cfg.get_dossier('Robot'), env='Robot')
 
     max_confidences_negative = test_model(modele, test_data_negative)
     max_confidences_positive = test_model(modele, test_data_positive)

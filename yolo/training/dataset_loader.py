@@ -6,11 +6,12 @@ import math
 import os
 
 from PIL import Image
-
-import sys
-sys.path.insert(0,'..')
-import config as cfg
-from KerasSequence import KerasSequence
+import yolo.config as cfg_global
+if cfg_global.training == 'balles':
+    import yolo.training.ball.config as cfg
+else:
+    import yolo.training.robot.config as cfg
+from yolo.training.keras_sequence import KerasSequence
 
 def best_anchor(anchors, rayon):
     distances = [abs(a - rayon) for a in anchors]
@@ -20,26 +21,10 @@ class Entree:
     def __init__(self, nom:str, labels:dict, image_path:str, flipper:bool, env:str):
         self.nom = nom
         self.balles = [label for label in labels if label['categorie'] == 1]
+        self.robots = [label for label in labels if label['categorie'] == 2]
         self.image_path = image_path
         self.flipper = flipper
         self.env = env
-    def nearest(self, image, resized_image_width, resized_image_height):
-        """
-        Exact same function as executed in C++ on the robot.
-        """
-        new_image = np.zeros((resized_image_height, resized_image_width, 3))
-        x_scale = (image.shape[1] * 1.0) / resized_image_width
-        y_scale = (image.shape[0] * 1.0) / resized_image_height
-        x = 0
-        y = 0
-        for i in range(resized_image_height):
-            x = math.floor(1.0 + (i * x_scale))
-            for j in range(resized_image_width):
-                y = math.floor(1.0 + (j * y_scale))
-                new_image[i][j][0] = image[x][y][0]
-                new_image[i][j][1] = image[x][y][1]
-                new_image[i][j][2] = image[x][y][2]
-        return new_image
     def x(self):
         image = Image.open(self.image_path)
         resized_image_height, resized_image_width = cfg.get_resized_image_resolution()
@@ -55,14 +40,14 @@ class Entree:
         yolo_height, yolo_width = cfg.get_yolo_resolution()
         anchors = cfg.get_anchors()
         value = np.zeros((yolo_height, yolo_width, 5 + len(anchors)))
-        for balle in self.balles:
-            width = balle['right'] - balle['left']
-            height = balle['bottom'] - balle['top']
+        for obj in self.balles:
+            width = obj['right'] - obj['left']
+            height = obj['bottom'] - obj['top']
             if self.flipper:
-                x = image_width - balle['right'] + width / 2 #centre geometrique de la boite
+                x = image_width - obj['right'] + width / 2 #centre geometrique de la boite
             else:
-                x = balle['left'] + width / 2 #centre geometrique de la boite
-            y = balle['top'] + height / 2 #centre geometrique de la boite
+                x = obj['left'] + width / 2 #centre geometrique de la boite
+            y = obj['top'] + height / 2 #centre geometrique de la boite
             center_x = int(x / image_width * yolo_width)
             center_y = int(y / image_height * yolo_height)
             center = (center_y, center_x)
@@ -77,7 +62,7 @@ class Entree:
                 value[center][3] = 1
             else:
                 value[center][4] = 1
-            #classification pour la taille de la balle
+            #classification pour la taille de l'objet
             rayon = max(width, height) / image_width / 2
             best_anchor_index = best_anchor(anchors, rayon)
             value[center][5 + best_anchor_index] = 1 #rayon anchor
@@ -122,7 +107,7 @@ def split_dataset(entrees, batch_size=16, test=True):
 def create_dataset(batch_size, labels_path:str, images_path:str, env:str):
     entrees = lire_entrees(labels_path, images_path, env)
     if env == 'Genere':
-        path = '../' + cfg.get_dossier('HardNegative', 'YCbCr')
+        path = cfg.get_dossier('HardNegative', 'YCbCr')
         entrees += lire_toutes_les_images(path)
     train, validation, test = split_dataset(entrees, batch_size, env == 'Simulation')
     return train, validation, test

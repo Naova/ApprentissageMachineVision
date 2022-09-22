@@ -1,16 +1,15 @@
 import tensorflow.keras as keras
 
 from pathlib import Path
-import sys
-sys.path.insert(0,'..')
+
 import json
 
 import tqdm
 
-import config as cfg
-import utils
-from Dataset_Loader import lire_toutes_les_images, lire_entrees
-from test_robot_model import test_model
+import yolo.training.ball.config as cfg
+import yolo.utils.args_parser as args_parser
+from yolo.training.dataset_loader import lire_toutes_les_images, lire_entrees
+from yolo.training.ball.test_robot_model import test_model
 
 def test_datapoints(y_neg, y_pos):
     nb_points = 1000
@@ -58,11 +57,11 @@ def test_datapoints(y_neg, y_pos):
     return stats
 
 def main():
-    args = utils.parse_args_env_cam('Test the yolo model on a bunch of test images and output stats.')
+    args = args_parser.parse_args_env_cam('Test the yolo model on a bunch of test images and output stats.')
 
-    test_data_negative = lire_toutes_les_images('../'+cfg.get_dossier('TestRobot'))
-    test_data_positive = lire_toutes_les_images('../'+cfg.get_dossier('TestRobotPositive'))
-    test_data_positive += lire_entrees('../'+cfg.get_labels_path('Robot'), '../'+cfg.get_dossier('Robot'), env='Robot')
+    test_data_negative = lire_toutes_les_images(cfg.get_dossier('TestRobot'))
+    test_data_positive = lire_toutes_les_images(cfg.get_dossier('TestRobotPositive'))
+    test_data_positive += lire_entrees(cfg.get_labels_path('Robot'), cfg.get_dossier('Robot'), env='Robot')
 
     modeles = Path(f'tests/{cfg.camera}/').glob('*.h5')
     modeles = [m for m in modeles]

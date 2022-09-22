@@ -1,18 +1,7 @@
-import os
 import json
+import os
 
-camera = 'upper' # doit etre dans {'upper', 'lower'}
-
-"""
-env dans {'Simulation', 'Robot', 'Genere'}
-type_fichier dans {'RGB', 'YCbCr'}
-"""
-def get_dossier(env='Simulation', type_fichier='YCbCr'):
-    return f'Dataset/{env}/{camera}/{type_fichier}/'
-def get_labels_path(env='Simulation'):
-    return f'Dataset/{env}/{camera}/labels.json'
-
-naovaCodePath = '../NaovaCode'
+import yolo.config as cfg
 
 #resolution de l'image d'entree
 resolutions = {
@@ -42,9 +31,6 @@ resolutions = {
     },
 }
 
-def get_image_resolution(env='Simulation'):
-    return resolutions[env][camera]
-
 upper_resized_image_height = 120
 upper_resized_image_width = 160
 
@@ -55,10 +41,11 @@ cycle_gan_image_height = 128
 cycle_gan_image_width = 144
 
 def get_resized_image_resolution():
-    if camera == 'upper':
+    if cfg.camera == 'upper':
         return upper_resized_image_height, upper_resized_image_width
     else:
         return lower_resized_image_height, lower_resized_image_width
+
 
 #resolution de l'output du modele. Doit concorder avec le modele lui-meme. (voir la derniere couche du summary)
 upper_yolo_height = None
@@ -67,7 +54,7 @@ lower_yolo_height = None
 lower_yolo_width = None
 
 def set_yolo_resolution(height, width):
-    if camera == 'upper':
+    if cfg.camera == 'upper':
         global upper_yolo_height, upper_yolo_width
         upper_yolo_height = height
         upper_yolo_width = width
@@ -77,7 +64,7 @@ def set_yolo_resolution(height, width):
         lower_yolo_width = width
 
 def get_yolo_resolution():
-    if camera == 'upper':
+    if cfg.camera == 'upper':
         return upper_yolo_height, upper_yolo_width
     else:
         return lower_yolo_height, lower_yolo_width
@@ -86,7 +73,7 @@ yolo_nb_anchors_upper = 3
 yolo_nb_anchors_lower = 3
 
 def get_nb_anchors():
-    if camera == 'upper':
+    if cfg.camera == 'upper':
         return yolo_nb_anchors_upper
     else:
         return yolo_nb_anchors_lower
@@ -94,7 +81,7 @@ def get_nb_anchors():
 __yolo_anchors = [] #rayon de la balle en pourcentage de la largeur de l'image
 
 def get_anchors_path():
-    return f'anchors_{camera}.json'
+    return f'anchors_{cfg.camera}.json'
 
 def get_anchors():
     global __yolo_anchors
@@ -110,8 +97,17 @@ def get_anchors():
 
 retrain = True
 
-def get_modele_path(env='Simulation'):
-    env = env.lower()
-    if env == 'genere':
-        env = 'robot'
-    return f'yolo_modele_{env}_{camera}.h5'
+
+def get_image_resolution(env='Simulation'):
+    return resolutions[env][cfg.camera]
+
+
+"""
+env dans {'Simulation', 'Robot', 'Genere'}
+type_fichier dans {'RGB', 'YCbCr'}
+"""
+def get_dossier(env='Simulation', type_fichier='YCbCr'):
+    return f'Dataset/{env}/{cfg.camera}/{type_fichier}/'
+def get_labels_path(env='Simulation'):
+    return f'Dataset/{env}/{cfg.camera}/labels.json'
+

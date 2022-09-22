@@ -4,7 +4,8 @@ import numpy as np
 import json
 from pathlib import Path
 from tqdm import tqdm
-import config as cfg
+import yolo.training.ball.config as cfg
+import yolo.config as cfg_global
 import os.path
 import os
 import shutil
@@ -66,7 +67,7 @@ def extract_labels(path_entree:str, path_sortie:str, etiquette_path:str):
         shutil.copy(i, path_sortie + i.split('/')[-1])
 
 def main():
-    dossier_tempo = f'../NaovaCode/Dataset/{cfg.camera}/'
+    dossier_tempo = f'{cfg_global.naovaCodePath}/Dataset/{cfg.camera}/'
     dossier_brut = cfg.get_dossier('Robot', 'Brut')
     print(dossier_brut)
     labels = cfg.get_labels_path('Robot')

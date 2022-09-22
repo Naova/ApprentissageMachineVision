@@ -2,9 +2,10 @@ import numpy as np
 from PIL import Image
 from pathlib import Path
 from tqdm import tqdm
-import config as cfg
 import os
-import YOLO.utils
+
+import yolo.training.ball.config as cfg
+import yolo.utils.args_parser as args_parser
 
 
 def get_dossiers(env='Simulation'):
@@ -32,11 +33,11 @@ def ycbcr_2_rgb(path_entree, path_sortie, env):
         Image.fromarray(arr.astype('uint8')).save(fichier.replace('YCbCr', 'RGB'))
 
 def main():
-    args = YOLO.utils.parse_args_env_cam('Convertit toutes les images PNG YCbCr en RGB dans le dossier correspondant.',
+    args = args_parser.parse_args_env_cam('Convertit toutes les images PNG YCbCr en RGB dans le dossier correspondant.',
                                          genere=True,
                                          hardnegative=True)
 
-    env = YOLO.utils.set_config(args, True, True)
+    env = args_parser.set_config(args, True, True)
     
     dossier_YCBCr, dossier_RGB = get_dossiers(env)
     print("De " + dossier_YCBCr + " vers " + dossier_RGB)
