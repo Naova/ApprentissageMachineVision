@@ -6,11 +6,8 @@ import math
 import os
 
 from PIL import Image
-import yolo.config as cfg_global
-if cfg_global.training == 'balles':
-    import yolo.training.ball.config as cfg
-else:
-    import yolo.training.robot.config as cfg
+
+from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 from yolo.training.keras_sequence import KerasSequence
 
 def best_anchor(anchors, rayon):
@@ -27,7 +24,7 @@ class Entree:
         self.env = env
     def x(self):
         image = Image.open(self.image_path)
-        resized_image_height, resized_image_width = cfg.get_resized_image_resolution()
+        resized_image_height, resized_image_width = cfg_prov.get_config().get_model_input_resolution()
         if resized_image_height != image.size[1] or resized_image_width != image.size[0]:
             image = image.resize((resized_image_width, resized_image_height), Image.NEAREST)
         image = np.array(image) / 255.
@@ -36,9 +33,9 @@ class Entree:
             return np.fliplr(image)
         return image
     def y(self):
-        image_height, image_width = cfg.get_image_resolution()
-        yolo_height, yolo_width = cfg.get_yolo_resolution()
-        anchors = cfg.get_anchors()
+        image_height, image_width = cfg_prov.get_config().get_image_resolution()
+        yolo_height, yolo_width = cfg_prov.get_config().get_model_output_resolution()
+        anchors = cfg_prov.get_config().get_anchors()
         value = np.zeros((yolo_height, yolo_width, 5 + len(anchors)))
         for obj in self.balles:
             width = obj['right'] - obj['left']
@@ -86,28 +83,20 @@ def lire_toutes_les_images(path:str):
     entrees += [Entree(f.split('/')[-1], {}, f, True, 'Robot') for f in fichiers]
     return entrees
 
-def split_dataset(entrees, batch_size=16, test=True):
+def split_dataset(entrees, ratio_train=0.9, batch_size=16):
     random.shuffle(entrees)
-    ratio_train = 0.95 #95%
-    ratio_test = 20 / len(entrees) #nombre fixe, pas besoin de plus
-    #ratio_validation = 10% - 20
 
-    i = int(len(entrees) * ratio_train)#train
-    if test:
-        j = int(len(entrees) * (ratio_train + ratio_test))#test
-    else:
-        j = i
+    i = int(len(entrees) * ratio_train)
 
     train = KerasSequence(entrees[:i], batch_size, Entree.x, Entree.y)
-    validation = KerasSequence(entrees[j:], batch_size, Entree.x, Entree.y)
-    test_data = entrees[i:j] if test else None
+    validation = KerasSequence(entrees[i:], batch_size, Entree.x, Entree.y)
 
-    return train, validation, test_data
+    return train, validation
 
-def create_dataset(batch_size, labels_path:str, images_path:str, env:str):
+def create_dataset(ratio_train, batch_size, labels_path:str, images_path:str, env:str):
     entrees = lire_entrees(labels_path, images_path, env)
     if env == 'Genere':
-        path = cfg.get_dossier('HardNegative', 'YCbCr')
+        path = cfg_prov.get_config().get_dossier('HardNegative', 'YCbCr')
         entrees += lire_toutes_les_images(path)
-    train, validation, test = split_dataset(entrees, batch_size, env == 'Simulation')
-    return train, validation, test
+    train, validation = split_dataset(entrees, ratio_train, batch_size)
+    return train, validation

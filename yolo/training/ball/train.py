@@ -1,10 +1,7 @@
 import tensorflow.keras as keras
 from tensorflow.keras.layers import Conv2D, MaxPool2D, SeparableConv2D, LeakyReLU
 
-import numpy as np
-from time import process_time
-
-import yolo.training.ball.config as cfg
+from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 from yolo.training.dataset_loader import create_dataset, lire_entrees
 import yolo.utils.image_processing as image_processing
 import yolo.utils.args_parser as args_parser
@@ -14,7 +11,7 @@ def kernel(x):
     return (x, x)
 
 def create_model_upper_simulation():
-    inputs = keras.Input(shape=(*cfg.get_resized_image_resolution(), 3))
+    inputs = keras.Input(shape=(*cfg_prov.get_config().get_model_input_resolution(), 3))
     x = SeparableConv2D(16, kernel(3), kernel(2), padding='same', bias_initializer='random_normal')(inputs)
     x = LeakyReLU(alpha=0.1)(x)
     x = SeparableConv2D(24, kernel(3), kernel(2), padding='same', bias_initializer='random_normal')(x)
@@ -25,11 +22,11 @@ def create_model_upper_simulation():
     x = LeakyReLU(alpha=0.1)(x)
     x = Conv2D(32, kernel(1), kernel(1), bias_initializer='random_normal')(x)
     x = LeakyReLU(alpha=0.1)(x)
-    x = Conv2D(5 + len(cfg.get_anchors()), kernel(1), kernel(1), activation='sigmoid', bias_initializer='random_normal')(x)
+    x = Conv2D(5 + len(cfg_prov.get_config().get_anchors()), kernel(1), kernel(1), activation='sigmoid', bias_initializer='random_normal')(x)
     return keras.Model(inputs=inputs, outputs=x)
 
 def create_model_lower_simulation():
-    inputs = keras.Input(shape=(*cfg.get_resized_image_resolution(), 3))
+    inputs = keras.Input(shape=(*cfg_prov.get_config().get_model_input_resolution(), 3))
     x = SeparableConv2D(16, kernel(3), kernel(2))(inputs)
     x = LeakyReLU(alpha=0.2)(x)
     x = SeparableConv2D(24, kernel(3), kernel(1), padding='same')(x)
@@ -39,11 +36,11 @@ def create_model_lower_simulation():
     x = MaxPool2D()(x)
     x = Conv2D(32, kernel(1), kernel(1))(x)
     x = LeakyReLU(alpha=0.2)(x)
-    x = Conv2D(5 + len(cfg.get_anchors()), kernel(1), kernel(1), activation='sigmoid')(x)
+    x = Conv2D(5 + len(cfg_prov.get_config().get_anchors()), kernel(1), kernel(1), activation='sigmoid')(x)
     return keras.Model(inputs=inputs, outputs=x)
 
 def create_model_upper_robot():
-    inputs = keras.Input(shape=(*cfg.get_resized_image_resolution(), 3))
+    inputs = keras.Input(shape=(*cfg_prov.get_config().get_model_input_resolution(), 3))
     x = SeparableConv2D(16, kernel(3), kernel(2), padding='same', bias_initializer='random_normal')(inputs)
     x = LeakyReLU(alpha=0.1)(x)
     x = Conv2D(16, kernel(3), kernel(1), padding='same', bias_initializer='random_normal')(x)
@@ -58,11 +55,11 @@ def create_model_upper_robot():
     x = LeakyReLU(alpha=0.1)(x)
     x = Conv2D(32, kernel(1), kernel(1), bias_initializer='random_normal')(x)
     x = LeakyReLU(alpha=0.1)(x)
-    x = Conv2D(5 + len(cfg.get_anchors()), kernel(1), kernel(1), activation='sigmoid', bias_initializer='random_normal')(x)
+    x = Conv2D(5 + len(cfg_prov.get_config().get_anchors()), kernel(1), kernel(1), activation='sigmoid', bias_initializer='random_normal')(x)
     return keras.Model(inputs=inputs, outputs=x)
 
 def create_model_lower_robot():
-    inputs = keras.Input(shape=(*cfg.get_resized_image_resolution(), 3))
+    inputs = keras.Input(shape=(*cfg_prov.get_config().get_model_input_resolution(), 3))
     x = SeparableConv2D(64, kernel(3), kernel(2))(inputs)
     x = LeakyReLU(alpha=0.2)(x)
     x = SeparableConv2D(48, kernel(3), kernel(1), padding='same')(x)
@@ -74,17 +71,17 @@ def create_model_lower_robot():
     x = MaxPool2D()(x)
     x = Conv2D(64, kernel(1), kernel(1))(x)
     x = LeakyReLU(alpha=0.2)(x)
-    x = Conv2D(5 + len(cfg.get_anchors()), kernel(1), kernel(1), activation='sigmoid')(x)
+    x = Conv2D(5 + len(cfg_prov.get_config().get_anchors()), kernel(1), kernel(1), activation='sigmoid')(x)
     return keras.Model(inputs=inputs, outputs=x)
 
 def create_model(env):
     if env == 'Genere':
-        if cfg.camera == 'upper':
+        if cfg_prov.get_config().camera == 'upper':
             return create_model_upper_robot()
         else:
             return create_model_lower_robot()
     else:
-        if cfg.camera == 'upper':
+        if cfg_prov.get_config().camera == 'upper':
             return create_model_upper_simulation()
         else:
             return create_model_lower_simulation()
@@ -96,40 +93,24 @@ def train_model(modele, train_generator, validation_generator):
     modele.fit(train_generator, validation_data=validation_generator, epochs=100, callbacks=[es, mc])
     return modele
 
-def train(train_generator, validation_generator, test_data, modele_path, env, test=True):
-    if cfg.retrain:
-        modele = create_model(env)
-        modele.summary()
-        cfg.set_yolo_resolution(modele.output_shape[1], modele.output_shape[2])
-        modele = train_model(modele, train_generator, validation_generator)
-        modele.save(modele_path, include_optimizer=False)
-        print('sauvegarde du modele : ' + modele_path)
-    else:
-        modele = keras.models.load_model(modele_path)
-        modele.summary()
-        cfg.set_yolo_resolution(modele.output_shape[1], modele.output_shape[2])
-    
-    if test:
-        for i, entree in enumerate(test_data):
-            entree_x = entree.x()
-            start = process_time()
-            prediction = modele.predict(np.array([entree_x]))[0]
-            stop = process_time()
-            print(entree.nom + ' : ', stop - start)
-            image_processing.generate_prediction_image(prediction, entree_x, entree.y(), i)
-
+def train(train_generator, validation_generator, modele_path, env, test=True):
+    modele = create_model(env)
+    modele.summary()
+    cfg_prov.get_config().set_model_output_resolution(modele.output_shape[1], modele.output_shape[2])
+    modele = train_model(modele, train_generator, validation_generator)
+    modele.save(modele_path, include_optimizer=False)
+    print('sauvegarde du modele : ' + modele_path)
+        
 def main():
-    args = args_parser.parse_args_env_cam('Train a yolo model to detect balls on an image.')
+    args = args_parser.parse_args_env_cam('Train a yolo model to detect balls on an image.', choosedetector=False)
+    args.detect_balls = True
     env = args_parser.set_config(args, use_robot=False)
 
-    labels = cfg.get_labels_path(env)
-    dossier_ycbcr = cfg.get_dossier(env, 'YCbCr')
-    modele_path = cfg.get_modele_path(env)
-    train_generator, validation_generator, test_data = create_dataset(16, labels, dossier_ycbcr, env)
-    if not args.simulation:
-        test_data = lire_entrees(cfg.get_labels_path('Robot'), cfg.get_dossier('Robot'), 'Robot')
-        #test_data = lire_toutes_les_images(cfg.get_dossier('RobotSansBalle'))
-    train(train_generator, validation_generator, test_data, modele_path, env, True)
+    labels = cfg_prov.get_config().get_labels_path(env)
+    dossier_ycbcr = cfg_prov.get_config().get_dossier(env, 'YCbCr')
+    modele_path = cfg_prov.get_config().get_modele_path(env)
+    train_generator, validation_generator = create_dataset(0.9, 16, labels, dossier_ycbcr, env)
+    train(train_generator, validation_generator, modele_path, env, True)
 
 
 if __name__ == '__main__':

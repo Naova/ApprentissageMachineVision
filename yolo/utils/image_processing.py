@@ -2,11 +2,11 @@ from skimage.draw import rectangle_perimeter
 import matplotlib.pyplot as plt
 import numpy as np
 
-import yolo.training.ball.config as cfg
+from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 
 def draw_rectangle_on_image(input_image, yolo_output, coords):
-    resized_image_height, resized_image_width = cfg.get_resized_image_resolution()
-    yolo_height, yolo_width = cfg.get_yolo_resolution()
+    resized_image_height, resized_image_width = cfg_prov.get_config().get_model_input_resolution()
+    yolo_height, yolo_width = cfg_prov.get_config().get_model_output_resolution()
     ratio_x = resized_image_width / yolo_width
     ratio_y = resized_image_height / yolo_height
     for i, obj in enumerate(yolo_output[coords]):
@@ -21,7 +21,7 @@ def draw_rectangle_on_image(input_image, yolo_output, coords):
         center_x = (coords[1][i] + x) * ratio_x
         center_y = (coords[0][i] + y) * ratio_y
         anchor_index = np.where(obj[5:]==obj[5:].max())[0][0]
-        anchors = cfg.get_anchors()
+        anchors = cfg_prov.get_config().get_anchors()
         rayon = anchors[anchor_index] * resized_image_width
         left = int(center_x - rayon)
         top = int(center_y - rayon)

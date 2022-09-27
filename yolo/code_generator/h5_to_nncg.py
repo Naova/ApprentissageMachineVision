@@ -8,7 +8,7 @@ from tensorflow.keras.models import load_model
 from nncg.nncg import NNCG
 
 import yolo.utils.args_parser as args_parser
-import yolo.training.ball.config as cfg
+from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
@@ -19,7 +19,7 @@ def create_dummy_db():
 def main():
     args = args_parser.parse_args_env_cam('Convertit un modele keras (.h5) en un fichier .cpp reproduisant l\'execution du modele.')
     env = args_parser.set_config(args)
-    model_path = cfg.get_modele_path(env)
+    model_path = cfg_prov.get_config().get_modele_path(env)
     model = load_model(model_path, compile=False)
     model.summary()
 

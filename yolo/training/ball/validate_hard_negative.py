@@ -6,17 +6,17 @@ import tqdm
 import shutil
 import json
 
-import yolo.training.ball.config as cfg
+from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 import yolo.utils.args_parser as args_parser
 from yolo.training.dataset_loader import lire_toutes_les_images
 
 def main():
     args = args_parser.parse_args_env_cam('Test the yolo model on a bunch of negatives images to find hard negatives.')
     env = args_parser.set_config(args)
-    modele = keras.models.load_model(cfg.get_modele_path(env))
+    modele = keras.models.load_model(cfg_prov.get_config().get_modele_path(env))
     modele.summary()
 
-    data = lire_toutes_les_images(cfg.get_dossier('NewNegative'))
+    data = lire_toutes_les_images(cfg_prov.get_config().get_dossier('NewNegative'))
 
     max_confidences = []
 
@@ -29,7 +29,7 @@ def main():
     
     print(len(max_confidences))
 
-    destination = cfg.get_dossier('HardNegative')
+    destination = cfg_prov.get_config().get_dossier('HardNegative')
 
     images = []
 

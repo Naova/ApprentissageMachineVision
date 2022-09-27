@@ -1,8 +1,12 @@
 import argparse
 
-import yolo.training.ball.config as cfg
+from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 
-def parse_args_env_cam(description: str, genere: bool = False, hardnegative: bool = False, testrobot: bool = False):
+def parse_args_env_cam(description: str,
+                        genere: bool = False,
+                        hardnegative: bool = False,
+                        testrobot: bool = False,
+                        choosedetector: bool = True):
     parser = argparse.ArgumentParser(description=description)
 
     action = parser.add_mutually_exclusive_group(required=True)
@@ -26,14 +30,24 @@ def parse_args_env_cam(description: str, genere: bool = False, hardnegative: boo
                         help='Utiliser la camera du haut.')
     action.add_argument('-l', '--lower', action='store_true',
                         help='Utiliser la camera du bas.')
+    if choosedetector:
+        action = parser.add_mutually_exclusive_group(required=True)
+        action.add_argument('-db', '--detect_balls', action='store_true',
+                            help='Entrainer un detecteur de balles.')
+        action.add_argument('-dr', '--detect_robots', action='store_true',
+                            help='Entrainer un detecteur de robots.')
 
     return parser.parse_args()
 
 def set_config(args, use_robot: bool = True, use_genere: bool = False):
-    if args.upper:
-        cfg.camera = "upper"
+    if args.detect_balls:
+        cfg_prov.set_config('balles')
     else:
-        cfg.camera = "lower"
+        cfg_prov.set_config('robots')
+    if args.upper:
+        cfg_prov.get_config().camera = "upper"
+    else:
+        cfg_prov.get_config().camera = "lower"
     if use_robot:
         if args.robot:
             return "Robot"

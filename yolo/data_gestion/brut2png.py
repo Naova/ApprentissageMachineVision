@@ -4,17 +4,17 @@ from pathlib import Path
 from tqdm import tqdm
 import os
 
-import yolo.training.ball.config as cfg
+from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 import yolo.utils.args_parser as args_parser
 
 
 def get_dossiers(env='Simulation'):
-    return cfg.get_dossier(env, 'Brut'), cfg.get_dossier(env, 'YCbCr'), cfg.get_dossier(env, 'RGB')
+    return cfg_prov.get_config().get_dossier(env, 'Brut'), cfg_prov.get_config().get_dossier(env, 'YCbCr'), cfg_prov.get_config().get_dossier(env, 'RGB')
 
 def brut_2_png(path_entree:str, path_sortie:str, convert_to_rgb:bool, env:str):
     dossier_entree = Path(path_entree).glob('**/batch_*')
     fichiers = [x.as_posix() for x in dossier_entree if 'label' not in str(x)]
-    image_height, image_width = cfg.get_image_resolution()
+    image_height, image_width = cfg_prov.get_config().get_image_resolution()
     for fichier in tqdm(fichiers):
         repertoire_sortie = path_sortie + fichier.split('/')[-1].split('_image')[0]
         new_path_sortie = repertoire_sortie + '/' + fichier.split('/')[-1] + '.png'
@@ -23,7 +23,7 @@ def brut_2_png(path_entree:str, path_sortie:str, convert_to_rgb:bool, env:str):
         if not os.path.isfile(new_path_sortie):
             f = np.fromfile(fichier, dtype=np.float32)
             if env == 'Genere':
-                f = np.reshape(f, (cfg.cycle_gan_image_height, cfg.cycle_gan_image_width, 3))
+                f = np.reshape(f, (cfg_prov.get_config().cycle_gan_image_height, cfg_prov.get_config().cycle_gan_image_width, 3))
                 f = Image.fromarray((f*255).astype(np.uint8)).resize((image_width, image_height))
                 f = np.array(f) / 255.0
             else:

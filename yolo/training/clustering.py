@@ -1,11 +1,11 @@
-import yolo.training.ball.config as cfg
+from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 
 import json
 import random
 from statistics import mean
 
 def read_rayons(path_etiquettes):
-    image_width, image_height = cfg.get_image_resolution()
+    image_width, image_height = cfg_prov.get_config().get_image_resolution()
     rayons = []
     with open(path_etiquettes, 'r') as fichier:
         labels = json.loads(fichier.read())
@@ -48,17 +48,17 @@ def kmean(population, k = 10):
     return sorted(clusters)
 
 def main(camera):
-    cfg.camera = camera
+    cfg_prov.get_config().camera = camera
     
-    rayons = read_rayons(cfg.get_labels_path('Simulation'))
-    anchors = kmean(rayons, cfg.get_nb_anchors())
+    rayons = read_rayons(cfg_prov.get_config().get_labels_path('Simulation'))
+    anchors = kmean(rayons, cfg_prov.get_config().get_nb_anchors())
     rayons.sort()
     with open('rayons.csv', 'w') as f:
         for rayon in rayons:
             s = str(rayon)
             f.write(s.replace('.', ',') + '\n')
     print(anchors)
-    with open(cfg.get_anchors_path(), 'w') as anchors_file:
+    with open(cfg_prov.get_config().get_anchors_path(), 'w') as anchors_file:
         anchors_file.write(json.dumps(anchors))
 
 if __name__ == '__main__':

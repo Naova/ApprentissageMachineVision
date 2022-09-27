@@ -6,10 +6,10 @@ import json
 
 import tqdm
 
-import yolo.training.ball.config as cfg
+from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 import yolo.utils.args_parser as args_parser
 from yolo.training.dataset_loader import lire_toutes_les_images, lire_entrees
-from yolo.training.ball.test_robot_model import test_model
+from yolo.training.test_robot_model import test_model
 
 def test_datapoints(y_neg, y_pos):
     nb_points = 1000
@@ -59,11 +59,11 @@ def test_datapoints(y_neg, y_pos):
 def main():
     args = args_parser.parse_args_env_cam('Test the yolo model on a bunch of test images and output stats.')
 
-    test_data_negative = lire_toutes_les_images(cfg.get_dossier('TestRobot'))
-    test_data_positive = lire_toutes_les_images(cfg.get_dossier('TestRobotPositive'))
-    test_data_positive += lire_entrees(cfg.get_labels_path('Robot'), cfg.get_dossier('Robot'), env='Robot')
+    test_data_negative = lire_toutes_les_images(cfg_prov.get_config().get_dossier('TestRobot'))
+    test_data_positive = lire_toutes_les_images(cfg_prov.get_config().get_dossier('TestRobotPositive'))
+    test_data_positive += lire_entrees(cfg_prov.get_config().get_labels_path('Robot'), cfg_prov.get_config().get_dossier('Robot'), env='Robot')
 
-    modeles = Path(f'tests/{cfg.camera}/').glob('*.h5')
+    modeles = Path(f'tests/{cfg_prov.get_config().camera}/').glob('*.h5')
     modeles = [m for m in modeles]
     for modele_path in tqdm.tqdm(modeles):
         print(f'loading {modele_path}')
@@ -86,10 +86,10 @@ def main():
 
         new_stats = test_datapoints(y_neg, y_pos)
 
-        with open(f'stats_modeles_confidence_{cfg.camera}.json', 'r') as f:
+        with open(f'stats_modeles_confidence_{cfg_prov.get_config().camera}.json', 'r') as f:
             stats = json.load(f)
         stats[str(modele_path).replace('\\', '/').split('/')[-1]] = new_stats
-        with open(f'stats_modeles_confidence_{cfg.camera}.json', 'w') as f:
+        with open(f'stats_modeles_confidence_{cfg_prov.get_config().camera}.json', 'w') as f:
             json.dump(stats, f)
 
 

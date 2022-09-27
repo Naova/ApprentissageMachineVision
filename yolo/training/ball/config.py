@@ -3,7 +3,13 @@ import os
 
 import yolo.config as cfg
 
-get_modele_path = cfg.get_modele_path
+
+def get_modele_path(env='Simulation'):
+    env = env.lower()
+    if env == 'genere':
+        env = 'robot'
+    return f'modele_balles_{env}_{cfg.camera}.h5'
+
 
 #resolution de l'image d'entree
 resolutions = {
@@ -42,7 +48,7 @@ lower_resized_image_width = 100
 cycle_gan_image_height = 128
 cycle_gan_image_width = 144
 
-def get_resized_image_resolution():
+def get_model_input_resolution():
     if cfg.camera == 'upper':
         return upper_resized_image_height, upper_resized_image_width
     else:
@@ -55,7 +61,7 @@ upper_yolo_width = None
 lower_yolo_height = None
 lower_yolo_width = None
 
-def set_yolo_resolution(height, width):
+def set_model_output_resolution(height, width):
     if cfg.camera == 'upper':
         global upper_yolo_height, upper_yolo_width
         upper_yolo_height = height
@@ -65,7 +71,7 @@ def set_yolo_resolution(height, width):
         lower_yolo_height = height
         lower_yolo_width = width
 
-def get_yolo_resolution():
+def get_model_output_resolution():
     if cfg.camera == 'upper':
         return upper_yolo_height, upper_yolo_width
     else:
@@ -96,9 +102,6 @@ def get_anchors():
         with open(anchors_path, 'r') as anchors_file:
             __yolo_anchors = json.loads(anchors_file.read())
         return __yolo_anchors
-
-retrain = True
-
 
 def get_image_resolution(env='Simulation'):
     return resolutions[env][cfg.camera]
