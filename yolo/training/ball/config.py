@@ -89,7 +89,7 @@ def get_nb_anchors():
 __yolo_anchors = [] #rayon de la balle en pourcentage de la largeur de l'image
 
 def get_anchors_path():
-    return f'anchors_{cfg.camera}.json'
+    return f'anchors_balles_{cfg.camera}.json'
 
 def get_anchors():
     global __yolo_anchors

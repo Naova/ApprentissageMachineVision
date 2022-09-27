@@ -89,11 +89,11 @@ def create_model(env):
 def train_model(modele, train_generator, validation_generator):
     modele.compile(optimizer=keras.optimizers.Adam(), loss='binary_crossentropy')
     es = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.00001, patience=10, restore_best_weights=True)
-    mc = keras.callbacks.ModelCheckpoint('modele_robot_upper_{epoch:02d}.h5', monitor='val_loss')
+    mc = keras.callbacks.ModelCheckpoint('modele_balles_robot_upper_{epoch:02d}.h5', monitor='val_loss')
     modele.fit(train_generator, validation_data=validation_generator, epochs=100, callbacks=[es, mc])
     return modele
 
-def train(train_generator, validation_generator, modele_path, env, test=True):
+def train(train_generator, validation_generator, modele_path, env):
     modele = create_model(env)
     modele.summary()
     cfg_prov.get_config().set_model_output_resolution(modele.output_shape[1], modele.output_shape[2])
@@ -110,7 +110,7 @@ def main():
     dossier_ycbcr = cfg_prov.get_config().get_dossier(env, 'YCbCr')
     modele_path = cfg_prov.get_config().get_modele_path(env)
     train_generator, validation_generator = create_dataset(0.9, 16, labels, dossier_ycbcr, env)
-    train(train_generator, validation_generator, modele_path, env, True)
+    train(train_generator, validation_generator, modele_path, env)
 
 
 if __name__ == '__main__':

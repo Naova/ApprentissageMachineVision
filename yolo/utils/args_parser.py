@@ -39,7 +39,7 @@ def parse_args_env_cam(description: str,
 
     return parser.parse_args()
 
-def set_config(args, use_robot: bool = True, use_genere: bool = False):
+def set_config(args, use_robot: bool = True, use_kaggle: bool = False, use_genere: bool = False):
     if args.detect_balls:
         cfg_prov.set_config('balles')
     else:
@@ -52,6 +52,8 @@ def set_config(args, use_robot: bool = True, use_genere: bool = False):
         if args.robot:
             return "Robot"
     else:
+        if use_kaggle:
+            return "Kaggle"
         if args.robot:
             return "Genere"
     if args.simulation:
