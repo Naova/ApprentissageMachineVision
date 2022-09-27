@@ -4,7 +4,8 @@ import numpy as np
 import json
 from pathlib import Path
 from tqdm import tqdm
-import config as cfg
+from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
+import yolo.config as cfg_global
 import os.path
 import os
 import shutil
@@ -19,7 +20,7 @@ def extract_labels(path_entree:str, path_sortie:str, etiquette_path:str):
 
     d = {}
 
-    image_height, image_width = cfg.get_image_resolution()
+    image_height, image_width = cfg_prov.get_config().get_image_resolution()
 
     for fichier, label in tqdm(zip(images, labels)):
         fichier = fichier.replace('\\', '/')
@@ -66,10 +67,10 @@ def extract_labels(path_entree:str, path_sortie:str, etiquette_path:str):
         shutil.copy(i, path_sortie + i.split('/')[-1])
 
 def main():
-    dossier_tempo = f'../NaovaCode/Dataset/{cfg.camera}/'
-    dossier_brut = cfg.get_dossier('Robot', 'Brut')
+    dossier_tempo = f'{cfg_global.naovaCodePath}/Dataset/{cfg_prov.get_config().camera}/'
+    dossier_brut = cfg_prov.get_config().get_dossier('Robot', 'Brut')
     print(dossier_brut)
-    labels = cfg.get_labels_path('Robot')
+    labels = cfg_prov.get_config().get_labels_path('Robot')
     print(labels)
     extract_labels(dossier_tempo, dossier_brut, labels)
     

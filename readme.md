@@ -1,6 +1,6 @@
 # Classificateur de ballons de soccer par apprentissage profond
 
-Code Python permettant d'étiqueter des images de balles et d'entraîner un réseau de neurones (suivant le modèle YOLO) pour en faire la détection.
+Code Python permettant d'entraîner un réseau de neurones (suivant le modèle YOLO) pour faire la détection des balles.
 
 ## Installation et démarrage
 
@@ -19,42 +19,42 @@ Vous devriez avoir ApprentissageMachineVision/Dataset/{Robot/, Simulation/, ...}
 
 ### Entraînement
 
-Le script `train.py` sert à entraîner le modèle. Il prend deux paramètres obligatoires pour déterminer l'environnement de déploiement (-r pour robot ou -s pour simulation) et la caméra utilisée (-u pour upper ou -l pour lower).
+Le script `yolo/training/ball/train.py` sert à entraîner le modèle. Il prend deux paramètres obligatoires pour déterminer l'environnement de déploiement (-r pour robot ou -s pour simulation) et la caméra utilisée (-u pour upper ou -l pour lower).
+NOTE : les scripts qui ne servent pas à entraîner un modèle nécessitent aussi un paramètre supplémentaire pour déterminer avec quel modèle on interagit : le détecteur de balles ou le détecteur de robots. -db pour le détecteur de balles ou -dr pour le détecteur de robots.
 
 Par exemple, pour entraîner le modèle détectant les balles de la caméra du haut sur un robot physique :
 ```
-cd YOLO
-python train.py -u -r
+python yolo/training/ball/train.py -u -r
 ```
 
 ### Déploiement
 
 #### Génération du code
 
-Le script `h5_to_nncg.py` utilise nncg pour générer un fichier cpp. Encore une fois, il faut préciser quel modèle on veut selon l'environnement et la caméra.
+Le script `yolo/code_generator/h5_to_nncg.py` utilise nncg pour générer un fichier cpp. Encore une fois, il faut préciser quel modèle on veut selon l'environnement et la caméra.
 
 Exemple d'utilisation pour la caméra du haut du robot:
 ```
-python h5_to_nncg.py -u -r
+python yolo/code_generator/h5_to_nncg.py -u -r -db
 ```
 
 #### Ajustements du code
 
-NNCG ne génère pas du code propre à être déployé dans NaovaCode. Non seulement ça, mais il fait aussi une erreur de compilation (oups). Le script `fix_generated_code.py` règle ces problèmes. Il est bien important de le lancer une seule fois pour un fichier cpp. Autrement, à la seconde exécution, le script brisera le code.
+NNCG ne génère pas du code propre à être déployé dans NaovaCode. Non seulement ça, mais il fait aussi une erreur de compilation (oups). Le script `yolo/code_generator/fix_generated_code.py` règle ces problèmes. Il est bien important de le lancer une seule fois pour un fichier cpp. Autrement, à la seconde exécution, le script brisera le code.
 Les modifications apportées au fichier cpp ne sont pas très nombreuses ni très compliquées. NNCG ne donne pas le bon type aux arguments de sa fonction; il déclare l'argument contenant le tableau de sortie comme un tableau à une dimension, mais y accède comme si c'était un tableau à trois dimensions. Le script modifie les deux arguments pour que ce soient des tableaux à une dimension. On va aussi modifier le code pour retirer des aberrations, comme des additions de 0 ou des multiplications par 1 qui se répètent un peu partout.
 Éventuellement, on pourra s'arranger pour ne plus avoir de warnings quand on make le projet.
 
 Ce script a la même interface que les autres :
 ```
-python fix_generated_code.py -u -r
+python yolo/code_generator/fix_generated_code.py -u -r -db
 ```
 
 #### Déplacer les fichiers
 
-Pour sauver du temps à copier-coller les fichiers .cpp, on peut simplement lancer le script `move_cpp_file.py`, qui va copier le fichier cpp sélectionné au bon endoit dans NaovaCode. Nécessite d'avoir bien indiqué où se trouve NaovaCode sur votre ordinateur dans le fichier `config.py`.
+Pour sauver du temps à copier-coller les fichiers .cpp, on peut simplement lancer le script `yolo/code_generator/move_cpp_file.py`, qui va copier le fichier cpp sélectionné au bon endoit dans NaovaCode. Nécessite d'avoir bien indiqué où se trouve NaovaCode sur votre ordinateur dans le fichier `config.py`.
 
 ```
-python move_cpp_file.py -u -r
+python yolo/code_generator/move_cpp_file.py -u -r -db
 ```
 
 #### Dans NaovaCode

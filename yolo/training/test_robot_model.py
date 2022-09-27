@@ -1,18 +1,15 @@
 import tensorflow.keras as keras
 
-from typing import List
 import numpy as np
 import json
 import tqdm
 import matplotlib.pyplot as plt
 import shutil
 from datetime import datetime
-import sys
-sys.path.insert(0,'..')
 
-import config as cfg
-import utils
-from Dataset_Loader import lire_toutes_les_images, lire_entrees
+import yolo.config as cfg
+import yolo.utils.args_parser as args_parser
+from yolo.training.dataset_loader import lire_toutes_les_images, lire_entrees
 
 
 def test_model(modele, test_data):
@@ -31,7 +28,7 @@ def save_stats(confidences_negative, confidences_positive, env):
     y_neg = [x[2] for x in confidences_negative]
     y_pos = [x[2] for x in confidences_positive]
 
-    treshold = 0.25
+    treshold = 0.8
 
     false_negative = [x for x in y_pos if x <= treshold]
     true_negative = [x for x in y_neg if x <= treshold]
@@ -64,14 +61,14 @@ def save_stats(confidences_negative, confidences_positive, env):
 
     plt.axhline(y = treshold, color = 'b', linestyle = ':')
     plt.rcParams["axes.titlesize"] = 10
-    plt.title(f'Maximal confidence level per image from the test dataset.\n{cfg.camera.capitalize()} camera.')
+    plt.title(f'Maximal confidence level per image from the test dataset.\n{cfg_prov.get_config().camera.capitalize()} camera.')
     plt.xlabel('Images (sorted)')
     plt.ylabel('Max confidence level')
     plt.ylim(-0.05, 1.)
     plt.legend(['False negatives', 'True positives', 'True negatives', 'False positives', 'Detection treshold'])
     plt.grid()
 
-    plt.savefig(f'tests/{cfg.camera}/{time}.png')
+    plt.savefig(f'tests/{cfg_prov.get_config().camera}/{time}.png')
 
     plt.clf()
 
@@ -80,20 +77,20 @@ def save_stats(confidences_negative, confidences_positive, env):
     somme_pos = sum(y_pos)
     print(somme_pos)
     
-    source = cfg.get_modele_path(env)
-    destination = f'tests/{cfg.camera}/{time}.h5'
+    source = cfg_prov.get_config().get_modele_path(env)
+    destination = f'tests/{cfg_prov.get_config().camera}/{time}.h5'
     shutil.copy(source, destination)
 
     return somme_neg, somme_pos
 
 def main():
-    args = utils.parse_args_env_cam('Test the yolo model on a bunch of test images and output stats.')
-    env = utils.set_config(args)
-    modele = keras.models.load_model(cfg.get_modele_path(env))
+    args = args_parser.parse_args_env_cam('Test the yolo model on a bunch of test images and output stats.')
+    env = args_parser.set_config(args)
+    modele = keras.models.load_model(cfg_prov.get_config().get_modele_path(env))
     modele.summary()
-    test_data_positive = lire_toutes_les_images('../'+cfg.get_dossier('TestRobotPositive'))
-    test_data_negative = lire_toutes_les_images('../'+cfg.get_dossier('TestRobot'))
-    test_data_positive += lire_entrees('../'+cfg.get_labels_path('Robot'), '../'+cfg.get_dossier('Robot'), env='Robot')
+    test_data_positive = lire_toutes_les_images(cfg_prov.get_config().get_dossier('TestRobotPositive'))
+    test_data_negative = lire_toutes_les_images(cfg_prov.get_config().get_dossier('TestRobot'))
+    test_data_positive += lire_entrees(cfg_prov.get_config().get_labels_path('Robot'), cfg_prov.get_config().get_dossier('Robot'), env='Robot')
 
     max_confidences_negative = test_model(modele, test_data_negative)
     max_confidences_positive = test_model(modele, test_data_positive)

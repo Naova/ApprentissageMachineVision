@@ -1,70 +1,12 @@
 from skimage.draw import rectangle_perimeter
-
 import matplotlib.pyplot as plt
-
 import numpy as np
 
-import argparse
-
-import sys
-sys.path.insert(0,'..')
-import config as cfg
-
-
-def parse_args_env_cam(description: str, genere: bool = False, hardnegative: bool = False, testrobot: bool = False):
-    parser = argparse.ArgumentParser(description=description)
-
-    action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument('-s', '--simulation', action='store_true',
-                        help='Utiliser l\'environnement de la simulation.')
-    action.add_argument('-r', '--robot', action='store_true',
-                        help='Utiliser l\'environnement des robots.')
-    if genere:
-        action.add_argument('-g', '--genere', action='store_true',
-                        help='Utiliser l\'environnement genere par CycleGAN.')
-    if hardnegative:
-        action.add_argument('-hn', '--hardnegative', action='store_true',
-                        help='Utiliser les photos HardNegative.')
-        action.add_argument('-nn', '--newnegative', action='store_true',
-                        help='Utiliser les photos NewNegative.')
-    if testrobot:
-        action.add_argument('-tr', '--testrobot', action='store_true',
-                        help='Utiliser les photos de tests des modeles de robot.')
-    action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument('-u', '--upper', action='store_true',
-                        help='Utiliser la camera du haut.')
-    action.add_argument('-l', '--lower', action='store_true',
-                        help='Utiliser la camera du bas.')
-
-    return parser.parse_args()
-
-def set_config(args, use_robot: bool = True, use_genere: bool = False):
-    if args.upper:
-        cfg.camera = "upper"
-    else:
-        cfg.camera = "lower"
-    if use_robot:
-        if args.robot:
-            return "Robot"
-    else:
-        if args.robot:
-            return "Genere"
-    if args.simulation:
-        return "Simulation"
-    elif use_genere:
-        if args.genere:
-            return "Genere"
-    if args.hardnegative:
-        return "HardNegative"
-    if args.newnegative:
-        return "NewNegative"
-    if args.testrobot:
-        return "TestRobot"
-    raise Exception('Pas d''environnement valide selectionne!')
+from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 
 def draw_rectangle_on_image(input_image, yolo_output, coords):
-    resized_image_height, resized_image_width = cfg.get_resized_image_resolution()
-    yolo_height, yolo_width = cfg.get_yolo_resolution()
+    resized_image_height, resized_image_width = cfg_prov.get_config().get_model_input_resolution()
+    yolo_height, yolo_width = cfg_prov.get_config().get_model_output_resolution()
     ratio_x = resized_image_width / yolo_width
     ratio_y = resized_image_height / yolo_height
     for i, obj in enumerate(yolo_output[coords]):
@@ -79,7 +21,7 @@ def draw_rectangle_on_image(input_image, yolo_output, coords):
         center_x = (coords[1][i] + x) * ratio_x
         center_y = (coords[0][i] + y) * ratio_y
         anchor_index = np.where(obj[5:]==obj[5:].max())[0][0]
-        anchors = cfg.get_anchors()
+        anchors = cfg_prov.get_config().get_anchors()
         rayon = anchors[anchor_index] * resized_image_width
         left = int(center_x - rayon)
         top = int(center_y - rayon)
