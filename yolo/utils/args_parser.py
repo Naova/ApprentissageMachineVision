@@ -58,7 +58,7 @@ def set_config(args, use_robot: bool = True, use_kaggle: bool = False, use_gener
             return "Genere"
     if args.simulation:
         return "Simulation"
-    elif use_genere:
+    if use_genere:
         if args.genere:
             return "Genere"
     if args.hardnegative:

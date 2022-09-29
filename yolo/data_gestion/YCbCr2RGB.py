@@ -38,9 +38,10 @@ def ycbcr_2_rgb(path_entree, path_sortie, env):
 def main():
     args = args_parser.parse_args_env_cam('Convertit toutes les images PNG YCbCr en RGB dans le dossier correspondant.',
                                          genere=True,
-                                         hardnegative=True)
+                                         hardnegative=True,
+                                         testrobot=True)
 
-    env = args_parser.set_config(args, True, True)
+    env = args_parser.set_config(args, True, True, True)
     
     dossier_YCBCr, dossier_RGB = get_dossiers(env)
     print("De " + dossier_YCBCr + " vers " + dossier_RGB)
