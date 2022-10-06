@@ -17,6 +17,10 @@ resolutions = {
         'upper': (240, 320),
         'lower': (120, 160),
     },
+    'Kaggle': {
+        'upper': (480, 640),
+        'lower': (120, 160),
+    },
     'Genere': {
         'upper': (128, 144),
         'lower': (128, 144),

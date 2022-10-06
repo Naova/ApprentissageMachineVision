@@ -2,7 +2,7 @@ import tensorflow.keras as keras
 from tensorflow.keras.layers import Conv2D, MaxPool2D, SeparableConv2D, LeakyReLU
 
 from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
-from yolo.training.dataset_loader import create_dataset, lire_entrees
+from yolo.training.dataset_loader import create_dataset
 import yolo.utils.image_processing as image_processing
 import yolo.utils.args_parser as args_parser
 
@@ -75,7 +75,7 @@ def create_model_lower_robot():
     return keras.Model(inputs=inputs, outputs=x)
 
 def create_model(env):
-    if env == 'Genere':
+    if env == 'Genere' or env == 'Kaggle':
         if cfg_prov.get_config().camera == 'upper':
             return create_model_upper_robot()
         else:
@@ -102,7 +102,7 @@ def train(train_generator, validation_generator, modele_path, env):
     print('sauvegarde du modele : ' + modele_path)
         
 def main():
-    args = args_parser.parse_args_env_cam('Train a yolo model to detect balls on an image.', choosedetector=False)
+    args = args_parser.parse_args_env_cam('Train a yolo model to detect balls on an image.')
     args.detect_balls = True
     env = args_parser.set_config(args, use_robot=False)
 

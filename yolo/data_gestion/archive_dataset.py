@@ -3,7 +3,7 @@ import zipfile
 import pathlib
 import os
 
-dataset_subfolders = ["Genere", "Robot", "Simulation", "HardNegative", "NewNegative", "TestRobot"]
+dataset_subfolders = ["Kaggle", "Genere", "Robot", "Simulation", "HardNegative", "NewNegative", "TestRobot"]
 cameras = ["lower", "upper"]
 things_to_zip = ["labels.json", "YCbCr"]
 

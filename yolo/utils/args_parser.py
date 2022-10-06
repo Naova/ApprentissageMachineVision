@@ -5,8 +5,7 @@ from yolo.training.configuration_provider import ConfigurationProvider as cfg_pr
 def parse_args_env_cam(description: str,
                         genere: bool = False,
                         hardnegative: bool = False,
-                        testrobot: bool = False,
-                        choosedetector: bool = True):
+                        testrobot: bool = False):
     parser = argparse.ArgumentParser(description=description)
 
     action = parser.add_mutually_exclusive_group(required=True)
@@ -14,6 +13,8 @@ def parse_args_env_cam(description: str,
                         help='Utiliser l\'environnement de la simulation.')
     action.add_argument('-r', '--robot', action='store_true',
                         help='Utiliser l\'environnement des robots.')
+    action.add_argument('-k', '--kaggle', action='store_true',
+                        help='Utiliser le dataset de Kaggle.')
     if genere:
         action.add_argument('-g', '--genere', action='store_true',
                         help='Utiliser l\'environnement genere par CycleGAN.')
@@ -30,16 +31,15 @@ def parse_args_env_cam(description: str,
                         help='Utiliser la camera du haut.')
     action.add_argument('-l', '--lower', action='store_true',
                         help='Utiliser la camera du bas.')
-    if choosedetector:
-        action = parser.add_mutually_exclusive_group(required=True)
-        action.add_argument('-db', '--detect_balls', action='store_true',
-                            help='Entrainer un detecteur de balles.')
-        action.add_argument('-dr', '--detect_robots', action='store_true',
-                            help='Entrainer un detecteur de robots.')
+    action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument('-db', '--detect_balls', action='store_true', default=True,
+                        help='Entrainer un detecteur de balles.')
+    action.add_argument('-dr', '--detect_robots', action='store_true', default=True,
+                        help='Entrainer un detecteur de robots.')
 
     return parser.parse_args()
 
-def set_config(args, use_robot: bool = True, use_kaggle: bool = False, use_genere: bool = False):
+def set_config(args, use_robot: bool = True, use_genere: bool = False):
     if args.detect_balls:
         cfg_prov.set_config('balles')
     else:
@@ -52,10 +52,11 @@ def set_config(args, use_robot: bool = True, use_kaggle: bool = False, use_gener
         if args.robot:
             return "Robot"
     else:
-        if use_kaggle:
-            return "Kaggle"
         if args.robot:
             return "Genere"
+    if args.kaggle:
+        return "Kaggle"
+        
     if args.simulation:
         return "Simulation"
     if use_genere:

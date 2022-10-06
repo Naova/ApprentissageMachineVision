@@ -33,7 +33,7 @@ class Entree:
             return np.fliplr(image)
         return image
     def y(self):
-        image_height, image_width = cfg_prov.get_config().get_image_resolution()
+        image_height, image_width = cfg_prov.get_config().get_image_resolution(self.env if self.env != 'Genere' else 'Robot')
         yolo_height, yolo_width = cfg_prov.get_config().get_model_output_resolution()
         anchors = cfg_prov.get_config().get_anchors()
         value = np.zeros((yolo_height, yolo_width, 5 + len(anchors)))
@@ -95,6 +95,7 @@ def split_dataset(entrees, ratio_train=0.9, batch_size=16):
 
 def create_dataset(ratio_train, batch_size, labels_path:str, images_path:str, env:str):
     entrees = lire_entrees(labels_path, images_path, env)
+    #entrees = [e for e in entrees if e.balles] ? (faut tester)
     if env == 'Genere':
         path = cfg_prov.get_config().get_dossier('HardNegative', 'YCbCr')
         entrees += lire_toutes_les_images(path)

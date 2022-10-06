@@ -58,6 +58,7 @@ def test_datapoints(y_neg, y_pos):
 
 def main():
     args = args_parser.parse_args_env_cam('Test the yolo model on a bunch of test images and output stats.')
+    env = args_parser.set_config(args)
 
     test_data_negative = lire_toutes_les_images(cfg_prov.get_config().get_dossier('TestRobot'))
     test_data_positive = lire_toutes_les_images(cfg_prov.get_config().get_dossier('TestRobotPositive'))

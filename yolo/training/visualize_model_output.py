@@ -4,8 +4,7 @@ from time import process_time
 import numpy as np
 
 
-import yolo.training.configuration_provider as cfg_prov
-cfg = cfg_prov.ConfigurationProvider().get_config()
+from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 from yolo.training.dataset_loader import create_dataset, lire_entrees
 import yolo.utils.image_processing as image_processing
 import yolo.utils.args_parser as args_parser
@@ -19,10 +18,8 @@ def main():
     dossier_ycbcr = cfg_prov.get_config().get_dossier(env, 'YCbCr')
     modele_path = cfg_prov.get_config().get_modele_path(env)
 
-    train_generator, validation_generator, test_data = create_dataset(16, labels, dossier_ycbcr, env)
-    if not args.simulation:
-        test_data = lire_entrees(cfg_prov.get_config().get_labels_path('Robot'), cfg_prov.get_config().get_dossier('Robot'), 'Robot')
-        #test_data = lire_toutes_les_images(cfg_prov.get_config().get_dossier('RobotSansBalle'))
+    test_data = lire_entrees(cfg_prov.get_config().get_labels_path(env), cfg_prov.get_config().get_dossier(env), env)
+    #test_data = lire_toutes_les_images(cfg_prov.get_config().get_dossier('RobotSansBalle'))
     
     modele = keras.models.load_model(modele_path)
     modele.summary()

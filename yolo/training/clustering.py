@@ -1,4 +1,5 @@
 from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
+import yolo.utils.args_parser as args_parser
 
 import json
 import random
@@ -35,7 +36,7 @@ def assign_values(clusters:list, population:list):
 def recalculate_mean(population:list):
     return mean(population)
 
-def kmean(population, k = 10):
+def kmean(population, k):
     clusters = random.choices(population, k=k)
 
     while True:
@@ -48,6 +49,8 @@ def kmean(population, k = 10):
     return sorted(clusters)
 
 def main(camera):
+    args = args_parser.parse_args_env_cam('Perform clustering on object size to select anchor boxes sizes.')
+    env = args_parser.set_config(args)
     cfg_prov.get_config().camera = camera
     
     rayons = read_rayons(cfg_prov.get_config().get_labels_path('Simulation'))

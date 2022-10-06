@@ -10,6 +10,7 @@ from datetime import datetime
 import yolo.config as cfg
 import yolo.utils.args_parser as args_parser
 from yolo.training.dataset_loader import lire_toutes_les_images, lire_entrees
+from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 
 
 def test_model(modele, test_data):
@@ -28,7 +29,7 @@ def save_stats(confidences_negative, confidences_positive, env):
     y_neg = [x[2] for x in confidences_negative]
     y_pos = [x[2] for x in confidences_positive]
 
-    treshold = 0.8
+    treshold = 0.364
 
     false_negative = [x for x in y_pos if x <= treshold]
     true_negative = [x for x in y_neg if x <= treshold]
