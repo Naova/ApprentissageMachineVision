@@ -59,7 +59,7 @@ def display_yolo_rectangles(input_image, yolo_output):
     plt.show()
 
 
-def display_model_prediction(prediction, wanted_prediction, prediction_on_image, wanted_output, save_to_file_name = None):
+def display_model_prediction(prediction, wanted_prediction, prediction_on_image, wanted_output, filename):
     fig = plt.figure()
     fig.add_subplot(2, 2, 1)
     plt.imshow(prediction)
@@ -75,14 +75,12 @@ def display_model_prediction(prediction, wanted_prediction, prediction_on_image,
     fig.add_subplot(2, 2, 4)
     plt.imshow(wanted_output)
     plt.title('ground truth on image')
-    if save_to_file_name:
-        plt.savefig('predictions/' + save_to_file_name, dpi=300)
-    plt.show()
+    plt.savefig('predictions/' + filename, dpi=300)
 
-def generate_prediction_image(prediction, x_test, y_test, prediction_number = None):
+def generate_prediction_image(prediction, x_test, y_test, filename):
     coords = n_max_coord(prediction[:,:,0], 1)
     prediction_on_image = draw_rectangle_on_image(ycbcr2rgb(x_test.copy()), prediction, coords)
     coords = treshold_coord(y_test[:,:,0])
     wanted_output = draw_rectangle_on_image(ycbcr2rgb(x_test.copy()), y_test, coords)
-    display_model_prediction(prediction[:,:,0], y_test[:,:,0], prediction_on_image, wanted_output, 'prediction_' + str(prediction_number) + '.png')
+    display_model_prediction(prediction[:,:,0], y_test[:,:,0], prediction_on_image, wanted_output, filename)
 

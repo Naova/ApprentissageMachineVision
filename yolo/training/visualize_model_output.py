@@ -12,7 +12,7 @@ import yolo.utils.args_parser as args_parser
 
 def main():
     args = args_parser.parse_args_env_cam('Train a yolo model to detect balls on an image.')
-    env = args_parser.set_config(args, use_robot=False)
+    env = args_parser.set_config(args, use_robot=True)
 
     labels = cfg_prov.get_config().get_labels_path(env)
     dossier_ycbcr = cfg_prov.get_config().get_dossier(env, 'YCbCr')
@@ -31,7 +31,10 @@ def main():
         prediction = modele.predict(np.array([entree_x]))[0]
         stop = process_time()
         print(entree.nom + ' : ', stop - start)
-        image_processing.generate_prediction_image(prediction, entree_x, entree.y(), i)
+        nom = entree.nom.split('/')[-1]
+        flip = 'flipped' if entree.flipper else 'original'
+        filename = f'{nom}_{flip}.png'
+        image_processing.generate_prediction_image(prediction, entree_x, entree.y(), filename)
 
 if __name__ == '__main__':
     main()
