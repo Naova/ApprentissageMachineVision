@@ -104,17 +104,6 @@ def save_stats(confidences_negative, confidences_positive, env):
     print(f'False positive : {fp}%')
     print(f'True positive : {fn}%')
 
-    with open('stats.json', 'r') as f:
-        stats = json.load(f)
-    stats[time] = {
-        'False positive':fp,
-        'True positive' :fn,
-        'y_neg':y_neg,
-        'y_pos':y_pos,
-    }
-    with open('stats.json', 'w') as f:
-        json.dump(stats, f)
-
     plt.scatter(range(len(false_negative)), false_negative, s=10, color='orange')
     plt.scatter(range(len(false_negative), len(true_positive)+len(false_negative)), true_positive, s=10, color='blue')
     plt.scatter(range(len(true_negative)), true_negative, s=10, color='green')
