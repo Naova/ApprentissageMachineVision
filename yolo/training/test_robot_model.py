@@ -13,7 +13,7 @@ from yolo.training.dataset_loader import lire_toutes_les_images, lire_entrees
 from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 
 
-def test_model(modele, test_data):
+def make_predictions(modele, test_data):
     max_confidences = []
 
     for entree in tqdm.tqdm(test_data):
@@ -23,13 +23,76 @@ def test_model(modele, test_data):
     max_confidences.sort(key=lambda x: x[2])
     return max_confidences
 
+def calculate_confidence_treshold(y_neg, y_pos):
+    nb_points = 1000
+    min_reached1, min_reached2 = False, False
+
+    stats = {}
+
+    for i in range(0, nb_points):
+        #pos = len([y for y in y_pos if y > i / (nb_points*2)]) / len(y_pos)
+        neg = len([y for y in y_neg if y > i / (nb_points)]) / len(y_neg)
+        pourcent_1 = 0.02
+        pourcent_2 = 0.015
+        pourcent_3 = 0.01
+
+        if neg < pourcent_1 and not min_reached1:
+            print(f'Seuil de détection pour {pourcent_1*100}% faux positifs : ' + str(i/nb_points))
+            print('Pourcentage de vrais positifs acceptés : ' + str(len([y for y in y_pos if y > i/nb_points]) / len(y_pos)))
+            print('Pourcentage de faux positifs acceptés : ' + str(len([y for y in y_neg if y > i/nb_points]) / len(y_neg)))
+            stats[pourcent_1] = {
+                'seuil_detection':i/nb_points,
+                'vrai_positifs_acceptes':len([y for y in y_pos if y > i/nb_points]) / len(y_pos),
+                'faux_positifs_acceptes':len([y for y in y_neg if y > i/nb_points]) / len(y_neg),
+            }
+            min_reached1 = True
+        if neg < pourcent_2 and not min_reached2:
+            print(f'Seuil de détection pour {pourcent_2*100}% faux positifs : ' + str(i/nb_points))
+            print('Pourcentage de vrais positifs acceptés : ' + str(len([y for y in y_pos if y > i/nb_points]) / len(y_pos)))
+            print('Pourcentage de faux positifs acceptés : ' + str(len([y for y in y_neg if y > i/nb_points]) / len(y_neg)))
+            stats[pourcent_2] = {
+                'seuil_detection':i/nb_points,
+                'vrai_positifs_acceptes':len([y for y in y_pos if y > i/nb_points]) / len(y_pos),
+                'faux_positifs_acceptes':len([y for y in y_neg if y > i/nb_points]) / len(y_neg),
+            }
+            min_reached2 = True
+        if neg < pourcent_3:
+            print(f'Seuil de détection pour {pourcent_3*100}% faux positifs : ' + str(i/nb_points))
+            print('Pourcentage de vrais positifs acceptés : ' + str(len([y for y in y_pos if y > i/nb_points]) / len(y_pos)))
+            print('Pourcentage de faux positifs acceptés : ' + str(len([y for y in y_neg if y > i/nb_points]) / len(y_neg)))
+            stats[pourcent_3] = {
+                'seuil_detection':i/nb_points,
+                'vrai_positifs_acceptes':len([y for y in y_pos if y > i/nb_points]) / len(y_pos),
+                'faux_positifs_acceptes':len([y for y in y_neg if y > i/nb_points]) / len(y_neg),
+            }
+            return stats
+    return stats
+
+def save_stats_brutes(y_neg, y_pos, env):
+    stats_brutes = {
+        'y_neg':y_neg,
+        'y_pos':y_pos,
+    }
+    with open(cfg_prov.get_config().get_modele_path(env).replace('.h5', '.json'), 'w') as f:
+        json.dump(stats_brutes, f)
+
 def save_stats(confidences_negative, confidences_positive, env):
     time = datetime.now().strftime('%Y_%m_%d-%H-%M-%S')
 
     y_neg = [x[2] for x in confidences_negative]
     y_pos = [x[2] for x in confidences_positive]
 
-    treshold = 0.364
+    save_stats_brutes(y_neg, y_pos, env)
+
+    new_stats = calculate_confidence_treshold(y_neg, y_pos)
+
+    with open(f'stats_modeles_confidence_{cfg_prov.get_config().camera}.json', 'r') as f:
+        stats = json.load(f)
+    stats[cfg_prov.get_config().get_modele_path(env).replace('\\', '/').split('/')[-1]] = new_stats
+    with open(f'stats_modeles_confidence_{cfg_prov.get_config().camera}.json', 'w') as f:
+        json.dump(stats, f)
+
+    treshold = new_stats[0.01]['seuil_detection']
 
     false_negative = [x for x in y_pos if x <= treshold]
     true_negative = [x for x in y_neg if x <= treshold]
@@ -93,11 +156,11 @@ def main():
     test_data_negative = lire_toutes_les_images(cfg_prov.get_config().get_dossier('TestRobot'))
     test_data_positive += lire_entrees(cfg_prov.get_config().get_labels_path('Robot'), cfg_prov.get_config().get_dossier('Robot'), env='Robot')
 
-    max_confidences_negative = test_model(modele, test_data_negative)
-    max_confidences_positive = test_model(modele, test_data_positive)
+    max_confidences_negative = make_predictions(modele, test_data_negative)
+    max_confidences_positive = make_predictions(modele, test_data_positive)
 
-    return save_stats(max_confidences_negative, max_confidences_positive, env)
+    save_stats(max_confidences_negative, max_confidences_positive, env)
 
-    
+
 if __name__ == '__main__':
     main()
