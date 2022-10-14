@@ -3,16 +3,17 @@ import os
 
 import yolo.config as cfg
 
+camera = ''
 
 def get_modele_path(env='Kaggle'):
     env = env.lower()
-    return f'modele_balles_{env}_{cfg.camera}.h5'
+    return f'modele_balles_{env}_{camera}.h5'
 
 
 #resolution de l'image d'entree
 resolutions = {
     'Kaggle': {
-        'upper': (240, 320), # a verifier
+        'upper': (480, 640), # a verifier
         'lower': (120, 160), # a verifier
     },
 }
@@ -24,7 +25,7 @@ lower_resized_image_height = 30
 lower_resized_image_width = 40
 
 def get_model_input_resolution():
-    if cfg.camera == 'upper':
+    if camera == 'upper':
         return upper_resized_image_height, upper_resized_image_width
     else:
         return lower_resized_image_height, lower_resized_image_width
@@ -37,7 +38,7 @@ lower_yolo_height = None
 lower_yolo_width = None
 
 def set_model_output_resolution(height, width):
-    if cfg.camera == 'upper':
+    if camera == 'upper':
         global upper_yolo_height, upper_yolo_width
         upper_yolo_height = height
         upper_yolo_width = width
@@ -47,17 +48,17 @@ def set_model_output_resolution(height, width):
         lower_yolo_width = width
 
 def get_model_output_resolution():
-    if cfg.camera == 'upper':
+    if camera == 'upper':
         return upper_yolo_height, upper_yolo_width
     else:
         return lower_yolo_height, lower_yolo_width
 
 #a modifier
-yolo_nb_anchors_upper = 3
+yolo_nb_anchors_upper = 6
 yolo_nb_anchors_lower = 3
 
 def get_nb_anchors():
-    if cfg.camera == 'upper':
+    if camera == 'upper':
         return yolo_nb_anchors_upper
     else:
         return yolo_nb_anchors_lower
@@ -66,7 +67,7 @@ __yolo_anchors = [] #rayon de la balle en pourcentage de la largeur de l'image
 
 #ancres a determiner
 def get_anchors_path():
-    return f'anchors_robots_{cfg.camera}.json'
+    return f'anchors_robots_{camera}.json'
 
 def get_anchors():
     global __yolo_anchors
@@ -81,10 +82,10 @@ def get_anchors():
         return __yolo_anchors
 
 def get_image_resolution(env='Simulation'):
-    return resolutions[env][cfg.camera]
+    return resolutions[env][camera]
 
 def get_dossier(env='Kaggle', type_fichier='YCbCr'):
-    return f'Dataset/{env}/{cfg.camera}/{type_fichier}/'
+    return f'Dataset/{env}/{camera}/{type_fichier}/'
 def get_labels_path(env='Kaggle'):
-    return f'Dataset/{env}/{cfg.camera}/labels.json'
+    return f'Dataset/{env}/{camera}/labels.json'
 

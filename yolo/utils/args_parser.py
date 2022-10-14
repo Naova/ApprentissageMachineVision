@@ -32,9 +32,9 @@ def parse_args_env_cam(description: str,
     action.add_argument('-l', '--lower', action='store_true',
                         help='Utiliser la camera du bas.')
     action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument('-db', '--detect_balls', action='store_true', default=True,
+    action.add_argument('-db', '--detect_balls', action='store_true', default=False,
                         help='Entrainer un detecteur de balles.')
-    action.add_argument('-dr', '--detect_robots', action='store_true', default=True,
+    action.add_argument('-dr', '--detect_robots', action='store_true', default=False,
                         help='Entrainer un detecteur de robots.')
 
     return parser.parse_args()

@@ -17,6 +17,8 @@ def create_model_upper():
     x = LeakyReLU(alpha=0.1)(x)
     x = SeparableConv2D(24, kernel(3), kernel(1), padding='same', bias_initializer='random_normal')(x)
     x = LeakyReLU(alpha=0.1)(x)
+    x = SeparableConv2D(24, kernel(3), kernel(2), padding='same', bias_initializer='random_normal')(x)
+    x = LeakyReLU(alpha=0.1)(x)
     x = Conv2D(32, kernel(1), kernel(1), bias_initializer='random_normal')(x)
     x = LeakyReLU(alpha=0.1)(x)
     x = Conv2D(5 + len(cfg_prov.get_config().get_anchors()), kernel(1), kernel(1), activation='sigmoid', bias_initializer='random_normal')(x)
@@ -58,15 +60,15 @@ def train(train_generator, validation_generator, modele_path, env):
     print('sauvegarde du modele : ' + modele_path)
         
 def main():
-    args = args_parser.parse_args_env_cam('Train a yolo model to detect robots on an image.', choosedetector=False)
+    args = args_parser.parse_args_env_cam('Train a yolo model to detect robots on an image.')
     args.detect_balls = False
-    env = args_parser.set_config(args, use_robot=False, use_kaggle=True)
+    env = args_parser.set_config(args, use_robot=False)
 
     labels = cfg_prov.get_config().get_labels_path(env)
     dossier_ycbcr = cfg_prov.get_config().get_dossier(env, 'YCbCr')
     modele_path = cfg_prov.get_config().get_modele_path(env)
     train_generator, validation_generator = create_dataset(0.9, 16, labels, dossier_ycbcr, env)
-    train(train_generator, validation_generator, modele_path, env, True)
+    train(train_generator, validation_generator, modele_path, env)
 
 
 if __name__ == '__main__':

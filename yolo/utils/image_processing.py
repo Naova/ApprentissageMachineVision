@@ -23,10 +23,16 @@ def draw_rectangle_on_image(input_image, yolo_output, coords):
         anchor_index = np.where(obj[5:]==obj[5:].max())[0][0]
         anchors = cfg_prov.get_config().get_anchors()
         rayon = anchors[anchor_index] * resized_image_width
-        left = int(center_x - rayon)
-        top = int(center_y - rayon)
-        right = int(center_x + rayon)
-        bottom = int(center_y + rayon)
+        if cfg_prov.get_config().detector == 'balles':
+            left = int(center_x - rayon)
+            top = int(center_y - rayon)
+            right = int(center_x + rayon)
+            bottom = int(center_y + rayon)
+        else:
+            left = int(center_x - rayon[0]/2)
+            top = int(center_y - rayon[1]/2)
+            right = int(center_x + rayon[0]/2)
+            bottom = int(center_y + rayon[1]/2)
         rect = rectangle_perimeter((top, left), (bottom, right), shape=(resized_image_height, resized_image_width), clip=True)
         input_image[rect] = 1
     return input_image

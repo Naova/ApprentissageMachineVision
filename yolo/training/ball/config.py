@@ -3,12 +3,13 @@ import os
 
 import yolo.config as cfg
 
+camera = ''
 
 def get_modele_path(env='Simulation'):
     env = env.lower()
     if env == 'genere':
         env = 'robot'
-    return f'modele_balles_{env}_{cfg.camera}.h5'
+    return f'modele_balles_{env}_{camera}.h5'
 
 
 #resolution de l'image d'entree
@@ -53,7 +54,7 @@ cycle_gan_image_height = 128
 cycle_gan_image_width = 144
 
 def get_model_input_resolution():
-    if cfg.camera == 'upper':
+    if camera == 'upper':
         return upper_resized_image_height, upper_resized_image_width
     else:
         return lower_resized_image_height, lower_resized_image_width
@@ -66,7 +67,7 @@ lower_yolo_height = None
 lower_yolo_width = None
 
 def set_model_output_resolution(height, width):
-    if cfg.camera == 'upper':
+    if camera == 'upper':
         global upper_yolo_height, upper_yolo_width
         upper_yolo_height = height
         upper_yolo_width = width
@@ -76,16 +77,16 @@ def set_model_output_resolution(height, width):
         lower_yolo_width = width
 
 def get_model_output_resolution():
-    if cfg.camera == 'upper':
+    if camera == 'upper':
         return upper_yolo_height, upper_yolo_width
     else:
         return lower_yolo_height, lower_yolo_width
 
-yolo_nb_anchors_upper = 3
-yolo_nb_anchors_lower = 3
+yolo_nb_anchors_upper = 4
+yolo_nb_anchors_lower = 4
 
 def get_nb_anchors():
-    if cfg.camera == 'upper':
+    if camera == 'upper':
         return yolo_nb_anchors_upper
     else:
         return yolo_nb_anchors_lower
@@ -93,7 +94,7 @@ def get_nb_anchors():
 __yolo_anchors = [] #rayon de la balle en pourcentage de la largeur de l'image
 
 def get_anchors_path():
-    return f'anchors_balles_{cfg.camera}.json'
+    return f'anchors_balles_{camera}.json'
 
 def get_anchors():
     global __yolo_anchors
@@ -108,7 +109,7 @@ def get_anchors():
         return __yolo_anchors
 
 def get_image_resolution(env='Simulation'):
-    return resolutions[env][cfg.camera]
+    return resolutions[env][camera]
 
 
 """
@@ -116,7 +117,7 @@ env dans {'Simulation', 'Robot', 'Genere'}
 type_fichier dans {'RGB', 'YCbCr'}
 """
 def get_dossier(env='Simulation', type_fichier='YCbCr'):
-    return f'Dataset/{env}/{cfg.camera}/{type_fichier}/'
+    return f'Dataset/{env}/{camera}/{type_fichier}/'
 def get_labels_path(env='Simulation'):
-    return f'Dataset/{env}/{cfg.camera}/labels.json'
+    return f'Dataset/{env}/{camera}/labels.json'
 

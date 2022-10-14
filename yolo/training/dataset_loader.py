@@ -10,8 +10,11 @@ from PIL import Image
 from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 from yolo.training.keras_sequence import KerasSequence
 
-def best_anchor(anchors, rayon):
+def best_anchor_balle(anchors, rayon):
     distances = [abs(a - rayon) for a in anchors]
+    return distances.index(min(distances))
+def best_anchor_robot(anchors, boite):
+    distances = [abs(a[0] - boite[0]) + abs(a[1] - boite[1]) for a in anchors]
     return distances.index(min(distances))
 
 class Entree:
@@ -28,7 +31,10 @@ class Entree:
         if resized_image_height != image.size[1] or resized_image_width != image.size[0]:
             image = image.resize((resized_image_width, resized_image_height), Image.NEAREST)
         image = np.array(image) / 255.
-            
+        
+        #a tester
+        #image = image + np.random.normal(scale=0.1)
+
         if self.flipper:
             return np.fliplr(image)
         return image
@@ -37,7 +43,8 @@ class Entree:
         yolo_height, yolo_width = cfg_prov.get_config().get_model_output_resolution()
         anchors = cfg_prov.get_config().get_anchors()
         value = np.zeros((yolo_height, yolo_width, 5 + len(anchors)))
-        for obj in self.balles:
+        objs = self.balles if cfg_prov.get_config().detector == 'balles' else self.robots
+        for obj in objs:
             width = obj['right'] - obj['left']
             height = obj['bottom'] - obj['top']
             if self.flipper:
@@ -48,6 +55,9 @@ class Entree:
             center_x = int(x / image_width * yolo_width)
             center_y = int(y / image_height * yolo_height)
             center = (center_y, center_x)
+
+            if width == 0 or height == 0:
+                continue
 
             value[center][0] = 1 #presence d'objet
             #classification pour position x-y
@@ -60,9 +70,13 @@ class Entree:
             else:
                 value[center][4] = 1
             #classification pour la taille de l'objet
-            rayon = max(width, height) / image_width / 2
-            best_anchor_index = best_anchor(anchors, rayon)
-            value[center][5 + best_anchor_index] = 1 #rayon anchor
+            if cfg_prov.get_config().detector == 'balles':
+                rayon = max(width, height) / image_width / 2
+                best_anchor_index = best_anchor_balle(anchors, rayon)
+            else:
+                boite = (width / image_width / 2, height / image_height / 2)
+                best_anchor_index = best_anchor_robot(anchors, boite)
+            value[center][5 + best_anchor_index] = 1 #boite anchor
         return value
 
 def lire_entrees(labels_path:str, data_path:str, env:str = 'Simulation'):

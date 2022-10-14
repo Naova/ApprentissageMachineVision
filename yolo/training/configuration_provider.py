@@ -8,6 +8,7 @@ class ConfigurationProvider:
                 self.config = cfg_balles
             else:
                 self.config = cfg_robots
+            self.config.detector = detector
     
     instance = None
     
