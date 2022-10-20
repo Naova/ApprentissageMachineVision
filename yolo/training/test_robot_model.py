@@ -68,27 +68,31 @@ def calculate_confidence_treshold(y_neg, y_pos):
             return stats
     return stats
 
-def save_stats_brutes(y_neg, y_pos, env):
+def save_stats_brutes(y_neg, y_pos, filepath:str):
     stats_brutes = {
         'y_neg':y_neg,
         'y_pos':y_pos,
     }
-    with open(cfg_prov.get_config().get_modele_path(env).replace('.h5', '.json'), 'w') as f:
+    with open(filepath, 'w') as f:
         json.dump(stats_brutes, f)
 
-def save_stats(confidences_negative, confidences_positive, env):
+def copy_model_file(modele_path, time):
+    destination = f'tests/{cfg_prov.get_config().camera}/{time}.h5'
+    shutil.copy(modele_path, destination)
+
+def save_stats(confidences_negative, confidences_positive, modele_path):
     time = datetime.now().strftime('%Y_%m_%d-%H-%M-%S')
 
     y_neg = [x[2] for x in confidences_negative]
     y_pos = [x[2] for x in confidences_positive]
 
-    save_stats_brutes(y_neg, y_pos, env)
+    save_stats_brutes(y_neg, y_pos, f'tests/{cfg_prov.get_config().camera}/{time}.json')
 
     new_stats = calculate_confidence_treshold(y_neg, y_pos)
 
     with open(f'stats_modeles_confidence_{cfg_prov.get_config().camera}.json', 'r') as f:
         stats = json.load(f)
-    stats[cfg_prov.get_config().get_modele_path(env).replace('\\', '/').split('/')[-1]] = new_stats
+    stats[modele_path.split('/')[-1]] = new_stats
     with open(f'stats_modeles_confidence_{cfg_prov.get_config().camera}.json', 'w') as f:
         json.dump(stats, f)
 
@@ -99,18 +103,29 @@ def save_stats(confidences_negative, confidences_positive, env):
     false_positive = [x for x in y_neg if x > treshold]
     true_positive = [x for x in y_pos if x > treshold]
 
+    precision = 100 * len(true_positive) / (len(true_positive) + len(false_positive))
+    recall = 100 * len(true_positive) / (len(true_positive) + len(false_negative))
+    f1_score = 2 * (recall * precision) / (recall + precision)
+    
     fp = 100 * len(false_positive) / (len(true_negative) + len(false_positive))
     fn = 100 * len(true_positive) / (len(false_negative) + len(true_positive))
-    print(f'False positive : {fp}%')
-    print(f'True positive : {fn}%')
+    print(f'False positive : {fp:.2f}%')
+    print(f'True positive : {fn:.2f}%')
+    
+    print(f'Precision : {precision:.2f}%')
+    print(f'Recall : {recall:.2f}%')
+    print(f'F1 score : {f1_score}%')
 
     plt.scatter(range(len(false_negative)), false_negative, s=10, color='orange')
     plt.scatter(range(len(false_negative), len(true_positive)+len(false_negative)), true_positive, s=10, color='blue')
     plt.scatter(range(len(true_negative)), true_negative, s=10, color='green')
     plt.scatter(range(len(true_negative), len(false_positive)+len(true_negative)), false_positive, s=10, color='red')
     
-    plt.text(0,-0.05,f'False positive : {fp}%')
-    plt.text(0,0.5,f'True positive : {fn}%')
+    plt.text(0,0.65, f'True positive : {fn:.2f}%')
+    plt.text(0,0.6, f'False positive : {fp:.2f}%')
+    plt.text(0,0.55,f'Precision : {precision:.2f}%')
+    plt.text(0,0.5,f'Recall : {recall:.2f}%')
+    plt.text(0,0.45,f'F1 Score : {f1_score:.2f}%')
 
     plt.axhline(y = treshold, color = 'b', linestyle = ':')
     plt.rcParams["axes.titlesize"] = 10
@@ -130,16 +145,14 @@ def save_stats(confidences_negative, confidences_positive, env):
     somme_pos = sum(y_pos)
     print(somme_pos)
     
-    source = cfg_prov.get_config().get_modele_path(env)
-    destination = f'tests/{cfg_prov.get_config().camera}/{time}.h5'
-    shutil.copy(source, destination)
-
-    return somme_neg, somme_pos
+    copy_model_file(modele_path, time)
 
 def main():
     args = args_parser.parse_args_env_cam('Test the yolo model on a bunch of test images and output stats.')
     env = args_parser.set_config(args)
-    modele = keras.models.load_model(cfg_prov.get_config().get_modele_path(env))
+    modele_path = cfg_prov.get_config().get_modele_path(env)
+    print(modele_path)
+    modele = keras.models.load_model(modele_path)
     modele.summary()
     test_data_positive = lire_toutes_les_images(cfg_prov.get_config().get_dossier('TestRobotPositive'))
     test_data_negative = lire_toutes_les_images(cfg_prov.get_config().get_dossier('TestRobot'))
@@ -147,8 +160,8 @@ def main():
 
     max_confidences_negative = make_predictions(modele, test_data_negative)
     max_confidences_positive = make_predictions(modele, test_data_positive)
-
-    save_stats(max_confidences_negative, max_confidences_positive, env)
+    
+    save_stats(max_confidences_negative, max_confidences_positive, modele_path)
 
 
 if __name__ == '__main__':
