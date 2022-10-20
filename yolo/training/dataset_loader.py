@@ -2,7 +2,6 @@ import numpy as np
 from pathlib import Path
 import json
 import random
-import math
 import os
 
 from PIL import Image
@@ -74,7 +73,7 @@ class Entree:
                 rayon = max(width, height) / image_width / 2
                 best_anchor_index = best_anchor_balle(anchors, rayon)
             else:
-                boite = (width / image_width / 2, height / image_height / 2)
+                boite = (width, height)
                 best_anchor_index = best_anchor_robot(anchors, boite)
             value[center][5 + best_anchor_index] = 1 #boite anchor
         return value

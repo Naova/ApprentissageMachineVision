@@ -22,17 +22,22 @@ def draw_rectangle_on_image(input_image, yolo_output, coords):
         center_y = (coords[0][i] + y) * ratio_y
         anchor_index = np.where(obj[5:]==obj[5:].max())[0][0]
         anchors = cfg_prov.get_config().get_anchors()
-        rayon = anchors[anchor_index] * resized_image_width
         if cfg_prov.get_config().detector == 'balles':
+            rayon = anchors[anchor_index] * resized_image_width
             left = int(center_x - rayon)
             top = int(center_y - rayon)
             right = int(center_x + rayon)
             bottom = int(center_y + rayon)
         else:
-            left = int(center_x - rayon[0]/2)
-            top = int(center_y - rayon[1]/2)
-            right = int(center_x + rayon[0]/2)
-            bottom = int(center_y + rayon[1]/2)
+            input_resolution = cfg_prov.get_config().get_image_resolution('Kaggle')
+            box = (
+                anchors[anchor_index][0] * resized_image_width / input_resolution[0],
+                anchors[anchor_index][1] * resized_image_height / input_resolution[1]
+            )
+            left = int(center_x - box[0]/2)
+            top = int(center_y - box[1]/2)
+            right = int(center_x + box[0]/2)
+            bottom = int(center_y + box[1]/2)
         rect = rectangle_perimeter((top, left), (bottom, right), shape=(resized_image_height, resized_image_width), clip=True)
         input_image[rect] = 1
     return input_image
@@ -82,9 +87,10 @@ def display_model_prediction(prediction, wanted_prediction, prediction_on_image,
     plt.imshow(wanted_output)
     plt.title('ground truth on image')
     plt.savefig('predictions/' + filename, dpi=300)
+    plt.clf()
 
 def generate_prediction_image(prediction, x_test, y_test, filename):
-    coords = n_max_coord(prediction[:,:,0], 1)
+    coords = treshold_coord(prediction[:,:,0], 0.3)
     prediction_on_image = draw_rectangle_on_image(ycbcr2rgb(x_test.copy()), prediction, coords)
     coords = treshold_coord(y_test[:,:,0])
     wanted_output = draw_rectangle_on_image(ycbcr2rgb(x_test.copy()), y_test, coords)

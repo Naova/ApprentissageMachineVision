@@ -16,6 +16,9 @@ resolutions = {
         'upper': (480, 640), # a verifier
         'lower': (120, 160), # a verifier
     },
+    'Robot': {
+        'upper': (240, 320),
+    }
 }
 
 upper_resized_image_height = 60

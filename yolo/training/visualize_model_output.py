@@ -13,11 +13,11 @@ import yolo.utils.args_parser as args_parser
 def main():
     args = args_parser.parse_args_env_cam('Train a yolo model to detect balls on an image.')
     env = args_parser.set_config(args, use_robot=True)
-
-    labels = cfg_prov.get_config().get_labels_path(env)
-    dossier_ycbcr = cfg_prov.get_config().get_dossier(env, 'YCbCr')
+    
     modele_path = cfg_prov.get_config().get_modele_path(env)
-
+    
+    if env == 'Kaggle':
+        env = 'Robot'
     test_data = lire_entrees(cfg_prov.get_config().get_labels_path(env), cfg_prov.get_config().get_dossier(env), env)
     #test_data = lire_toutes_les_images(cfg_prov.get_config().get_dossier('RobotSansBalle'))
     

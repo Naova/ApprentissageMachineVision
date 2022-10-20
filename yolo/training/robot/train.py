@@ -67,7 +67,7 @@ def main():
     labels = cfg_prov.get_config().get_labels_path(env)
     dossier_ycbcr = cfg_prov.get_config().get_dossier(env, 'YCbCr')
     modele_path = cfg_prov.get_config().get_modele_path(env)
-    train_generator, validation_generator = create_dataset(0.9, 16, labels, dossier_ycbcr, env)
+    train_generator, validation_generator = create_dataset(0.8, 16, labels, dossier_ycbcr, env)
     train(train_generator, validation_generator, modele_path, env)
 
 
