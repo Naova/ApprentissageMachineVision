@@ -9,7 +9,7 @@ def main():
     args = args_parser.parse_args_env_cam('Deplace le fichier cpp a la bonne place dans NaovaCode.')
     env = args_parser.set_config(args)
     model_path = cfg_prov.get_config().get_modele_path(env)
-    source = 'cnn_'+model_path.replace('.h5', '.cpp')
+    source = 'cnn_'+model_path.replace('.h5', '.cpp').replace('modele_balles', 'yolo_modele')
     print(source)
     destination = f'{cfg_global.naovaCodePath}/Src/Tools/NaovaTools/'
     print(destination)
