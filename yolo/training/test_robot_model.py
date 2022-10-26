@@ -10,6 +10,7 @@ from datetime import datetime
 import yolo.utils.args_parser as args_parser
 from yolo.training.dataset_loader import lire_toutes_les_images, lire_entrees
 from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
+from yolo.utils.metrics import iou_balles
 
 
 def make_predictions(modele, test_data):
@@ -18,7 +19,11 @@ def make_predictions(modele, test_data):
     for entree in tqdm.tqdm(test_data):
         entree_x = entree.x()
         prediction = modele.predict(np.array([entree_x]))[0]
-        max_confidences.append((entree.nom, entree.flipper, prediction[:,:,0].max().astype('float')))
+        if entree.balles:
+            iou = iou_balles(prediction, entree.y())
+        else:
+            iou = None
+        max_confidences.append((entree.nom, entree.flipper, prediction[:,:,0].max().astype('float'), iou))
     max_confidences.sort(key=lambda x: x[2])
     return max_confidences
 
@@ -80,7 +85,7 @@ def copy_model_file(modele_path, time):
     print(f'copy from {modele_path} to {destination}')
     shutil.copy(modele_path, destination)
 
-def save_stats(confidences_negative, confidences_positive, modele_path):
+def save_stats(confidences_negative, confidences_positive, modele_path, iou):
     time = datetime.now().strftime('%Y_%m_%d-%H-%M-%S')
 
     y_neg = [x[2] for x in confidences_negative]
@@ -109,7 +114,8 @@ def save_stats(confidences_negative, confidences_positive, modele_path):
     
     print(f'Precision : {precision:.2f}%')
     print(f'Recall : {recall:.2f}%')
-    print(f'F1 score : {f1_score}%')
+    print(f'F1 score : {f1_score:.2f}%')
+    print(f'Average IoU: {iou:.2f}%')
 
     if fn < 65:
         print('Score trop bas, ne sauvegarde pas.')
@@ -119,7 +125,7 @@ def save_stats(confidences_negative, confidences_positive, modele_path):
 
     save_stats_brutes(y_neg, y_pos, f'tests/{cfg_prov.get_config().camera}/{time}.json')
 
-    stats[modele_path.split('/')[-1]] = new_stats
+    stats[f'{time}.h5'] = new_stats
     with open(f'stats_modeles_confidence_{cfg_prov.get_config().camera}.json', 'w') as f:
         json.dump(stats, f)
 
@@ -133,6 +139,7 @@ def save_stats(confidences_negative, confidences_positive, modele_path):
     plt.text(0,0.55,f'Precision : {precision:.2f}%')
     plt.text(0,0.5,f'Recall : {recall:.2f}%')
     plt.text(0,0.45,f'F1 Score : {f1_score:.2f}%')
+    plt.text(0,0.4,f'Avg. IoU : {iou:.2f}%')
 
     plt.axhline(y = treshold, color = 'b', linestyle = ':')
     plt.rcParams["axes.titlesize"] = 10
@@ -161,14 +168,17 @@ def main():
     print(modele_path)
     modele = keras.models.load_model(modele_path)
     modele.summary()
+    cfg_prov.get_config().set_model_output_resolution(modele.output_shape[1], modele.output_shape[2])
     test_data_positive = lire_toutes_les_images(cfg_prov.get_config().get_dossier('TestRobotPositive'))
     test_data_negative = lire_toutes_les_images(cfg_prov.get_config().get_dossier('TestRobot'))
     test_data_positive += lire_entrees(cfg_prov.get_config().get_labels_path('Robot'), cfg_prov.get_config().get_dossier('Robot'), env='Robot')
 
-    max_confidences_negative = make_predictions(modele, test_data_negative)
     max_confidences_positive = make_predictions(modele, test_data_positive)
+    max_confidences_negative = make_predictions(modele, test_data_negative)
+    ious = [m[-1] for m in max_confidences_positive if m[-1] is not None]
+    iou = 100 * sum(ious) / len(ious)
     
-    save_stats(max_confidences_negative, max_confidences_positive, modele_path)
+    save_stats(max_confidences_negative, max_confidences_positive, modele_path, iou)
 
 
 if __name__ == '__main__':
