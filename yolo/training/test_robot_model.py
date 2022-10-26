@@ -77,6 +77,7 @@ def save_stats_brutes(y_neg, y_pos, filepath:str):
 
 def copy_model_file(modele_path, time):
     destination = f'tests/{cfg_prov.get_config().camera}/{time}.h5'
+    print(f'copy from {modele_path} to {destination}')
     shutil.copy(modele_path, destination)
 
 def save_stats(confidences_negative, confidences_positive, modele_path):
@@ -84,8 +85,6 @@ def save_stats(confidences_negative, confidences_positive, modele_path):
 
     y_neg = [x[2] for x in confidences_negative]
     y_pos = [x[2] for x in confidences_positive]
-
-    save_stats_brutes(y_neg, y_pos, f'tests/{cfg_prov.get_config().camera}/{time}.json')
 
     new_stats = calculate_confidence_treshold(y_neg, y_pos)
 
@@ -118,7 +117,9 @@ def save_stats(confidences_negative, confidences_positive, modele_path):
     else:
         print('Score bon, on sauvegarde')
 
-    stats[cfg_prov.get_config().get_modele_path(env).replace('\\', '/').split('/')[-1]] = new_stats
+    save_stats_brutes(y_neg, y_pos, f'tests/{cfg_prov.get_config().camera}/{time}.json')
+
+    stats[modele_path.split('/')[-1]] = new_stats
     with open(f'stats_modeles_confidence_{cfg_prov.get_config().camera}.json', 'w') as f:
         json.dump(stats, f)
 
