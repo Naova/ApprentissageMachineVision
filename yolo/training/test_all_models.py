@@ -21,15 +21,17 @@ def main():
 
     fichiers = sorted([f.as_posix() for f in fichiers])
 
-    for fichier in fichiers[10:]:
+    for fichier in fichiers[-20:]:
         print(f'\n\ntest du modele : {fichier}\n')
         modele = keras.models.load_model(fichier)
         modele.summary()
 
         max_confidences_negative = make_predictions(modele, test_data_negative)
         max_confidences_positive = make_predictions(modele, test_data_positive)
+        ious = [m[-1] for m in max_confidences_positive if m[-1] is not None]
+        iou = 100 * sum(ious) / len(ious)
 
-        save_stats(max_confidences_negative, max_confidences_positive, fichier)
+        save_stats(max_confidences_negative, max_confidences_positive, fichier, iou)
 
     fichiers = Path('modeles/').glob('*')
     for fichier in fichiers:

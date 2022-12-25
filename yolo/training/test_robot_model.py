@@ -29,42 +29,18 @@ def make_predictions(modele, test_data):
 
 def calculate_confidence_treshold(y_neg, y_pos):
     nb_points = 1000
-    min_reached1, min_reached2 = False, False
 
     stats = {}
 
     for i in range(0, nb_points):
-        #pos = len([y for y in y_pos if y > i / (nb_points*2)]) / len(y_pos)
         neg = len([y for y in y_neg if y > i / (nb_points)]) / len(y_neg)
-        pourcent_1 = 0.02
-        pourcent_2 = 0.015
-        pourcent_3 = 0.01
+        seuil = 0.01
 
-        if neg < pourcent_1 and not min_reached1:
-            print(f'Seuil de détection pour {pourcent_1*100}% faux positifs : ' + str(i/nb_points))
+        if neg < seuil:
+            print(f'Seuil de détection pour {seuil*100}% faux positifs : ' + str(i/nb_points))
             print('Pourcentage de vrais positifs acceptés : ' + str(len([y for y in y_pos if y > i/nb_points]) / len(y_pos)))
             print('Pourcentage de faux positifs acceptés : ' + str(len([y for y in y_neg if y > i/nb_points]) / len(y_neg)))
-            stats[pourcent_1] = {
-                'seuil_detection':i/nb_points,
-                'vrai_positifs_acceptes':len([y for y in y_pos if y > i/nb_points]) / len(y_pos),
-                'faux_positifs_acceptes':len([y for y in y_neg if y > i/nb_points]) / len(y_neg),
-            }
-            min_reached1 = True
-        if neg < pourcent_2 and not min_reached2:
-            print(f'Seuil de détection pour {pourcent_2*100}% faux positifs : ' + str(i/nb_points))
-            print('Pourcentage de vrais positifs acceptés : ' + str(len([y for y in y_pos if y > i/nb_points]) / len(y_pos)))
-            print('Pourcentage de faux positifs acceptés : ' + str(len([y for y in y_neg if y > i/nb_points]) / len(y_neg)))
-            stats[pourcent_2] = {
-                'seuil_detection':i/nb_points,
-                'vrai_positifs_acceptes':len([y for y in y_pos if y > i/nb_points]) / len(y_pos),
-                'faux_positifs_acceptes':len([y for y in y_neg if y > i/nb_points]) / len(y_neg),
-            }
-            min_reached2 = True
-        if neg < pourcent_3:
-            print(f'Seuil de détection pour {pourcent_3*100}% faux positifs : ' + str(i/nb_points))
-            print('Pourcentage de vrais positifs acceptés : ' + str(len([y for y in y_pos if y > i/nb_points]) / len(y_pos)))
-            print('Pourcentage de faux positifs acceptés : ' + str(len([y for y in y_neg if y > i/nb_points]) / len(y_neg)))
-            stats[pourcent_3] = {
+            stats[seuil] = {
                 'seuil_detection':i/nb_points,
                 'vrai_positifs_acceptes':len([y for y in y_pos if y > i/nb_points]) / len(y_pos),
                 'faux_positifs_acceptes':len([y for y in y_neg if y > i/nb_points]) / len(y_neg),
@@ -134,8 +110,6 @@ def save_stats(confidences_negative, confidences_positive, modele_path, iou):
     plt.scatter(range(len(true_negative)), true_negative, s=10, color='green')
     plt.scatter(range(len(true_negative), len(false_positive)+len(true_negative)), false_positive, s=10, color='red')
     
-    plt.text(0,0.65, f'True positive : {fn:.2f}%')
-    plt.text(0,0.6, f'False positive : {fp:.2f}%')
     plt.text(0,0.55,f'Precision : {precision:.2f}%')
     plt.text(0,0.5,f'Recall : {recall:.2f}%')
     plt.text(0,0.45,f'F1 Score : {f1_score:.2f}%')
@@ -147,7 +121,7 @@ def save_stats(confidences_negative, confidences_positive, modele_path, iou):
     plt.xlabel('Images (sorted)')
     plt.ylabel('Max confidence level')
     plt.ylim(-0.05, 1.)
-    plt.legend(['False negatives', 'True positives', 'True negatives', 'False positives', 'Detection treshold'])
+    plt.legend(['Detection treshold', 'False negatives', 'True positives', 'True negatives', 'False positives'])
     plt.grid()
 
     plt.savefig(f'tests/{cfg_prov.get_config().camera}/{time}.png')
