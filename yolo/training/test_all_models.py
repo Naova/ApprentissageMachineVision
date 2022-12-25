@@ -25,6 +25,7 @@ def main():
         print(f'\n\ntest du modele : {fichier}\n')
         modele = keras.models.load_model(fichier)
         modele.summary()
+        cfg_prov.get_config().set_model_output_resolution(modele.output_shape[1], modele.output_shape[2])
 
         max_confidences_negative = make_predictions(modele, test_data_negative)
         max_confidences_positive = make_predictions(modele, test_data_positive)
