@@ -23,8 +23,8 @@ def make_predictions(modele, test_data):
             iou = iou_balles(prediction, entree.y())
         else:
             iou = None
-        max_confidences.append((entree.nom, entree.flipper, prediction[:,:,0].max().astype('float'), iou))
-    max_confidences.sort(key=lambda x: x[2])
+        max_confidences.append((entree, prediction[:,:,0].max().astype('float'), iou))
+    max_confidences.sort(key=lambda x: x[1])
     return max_confidences
 
 def calculate_confidence_treshold(y_neg, y_pos):
@@ -48,14 +48,6 @@ def calculate_confidence_treshold(y_neg, y_pos):
             return stats
     return stats
 
-def save_stats_brutes(y_neg, y_pos, filepath:str):
-    stats_brutes = {
-        'y_neg':y_neg,
-        'y_pos':y_pos,
-    }
-    with open(filepath, 'w') as f:
-        json.dump(stats_brutes, f)
-
 def copy_model_file(modele_path, time):
     destination = f'tests/{cfg_prov.get_config().camera}/{time}.h5'
     print(f'copy from {modele_path} to {destination}')
@@ -64,8 +56,8 @@ def copy_model_file(modele_path, time):
 def save_stats(confidences_negative, confidences_positive, modele_path, iou):
     time = datetime.now().strftime('%Y_%m_%d-%H-%M-%S')
 
-    y_neg = [x[2] for x in confidences_negative]
-    y_pos = [x[2] for x in confidences_positive]
+    y_neg = [x[1] for x in confidences_negative]
+    y_pos = [x[1] for x in confidences_positive]
 
     new_stats = calculate_confidence_treshold(y_neg, y_pos)
 
@@ -93,13 +85,11 @@ def save_stats(confidences_negative, confidences_positive, modele_path, iou):
     print(f'F1 score : {f1_score:.2f}%')
     print(f'Average IoU: {iou:.2f}%')
 
-    if fn < 65:
+    if fn < 70:
         print('Score trop bas, ne sauvegarde pas.')
         return
     else:
         print('Score bon, on sauvegarde')
-
-    save_stats_brutes(y_neg, y_pos, f'tests/{cfg_prov.get_config().camera}/{time}.json')
 
     stats[f'{time}.h5'] = new_stats
     with open(f'stats_modeles_confidence_{cfg_prov.get_config().camera}.json', 'w') as f:
