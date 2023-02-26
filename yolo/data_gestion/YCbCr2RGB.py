@@ -41,7 +41,7 @@ def main():
                                          hardnegative=True,
                                          testrobot=True)
 
-    env = args_parser.set_config(args, True, True, True)
+    env = args_parser.set_config(args)
     
     dossier_YCBCr, dossier_RGB = get_dossiers(env)
     print("De " + dossier_YCBCr + " vers " + dossier_RGB)

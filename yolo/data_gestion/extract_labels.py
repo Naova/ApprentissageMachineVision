@@ -5,15 +5,15 @@ import json
 from pathlib import Path
 from tqdm import tqdm
 from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
+import yolo.utils.args_parser as args_parser
 import yolo.config as cfg_global
 import os.path
 import os
 import shutil
 
-def extract_labels(path_entree:str, path_sortie:str, etiquette_path:str):
-    dossier_entree = Path(path_entree).glob('**/*')
+def extract_labels(path_entree:str, etiquette_path:str):
+    dossier_entree = Path(path_entree).glob('*')
     fichiers = [str(x) for x in dossier_entree if x.is_file() and 'gitignore' not in str(x)]
-
     #match toutes les images etiquetees avec leurs etiquettes
     labels = [f for f in fichiers if 'label' in f]
     images = [l.replace('_label', '') for l in labels]
@@ -22,21 +22,10 @@ def extract_labels(path_entree:str, path_sortie:str, etiquette_path:str):
 
     image_height, image_width = cfg_prov.get_config().get_image_resolution()
 
-    for fichier, label in tqdm(zip(images, labels)):
-        fichier = fichier.replace('\\', '/')
+    for label in tqdm(labels):
         label = label.replace('\\', '/')
+        fichier = label.replace('_label', '')
         if '.gitignore' not in fichier:
-            f = np.fromfile(fichier, dtype=np.float32)
-            if len(f) == 0: #les fichiers provenant du robot sont parfois vides par manque d'espace disque
-                print(fichier)
-                os.remove(fichier)
-                os.remove(fichier + '_label')
-                continue
-            try:
-                f = np.reshape(f, (image_height, image_width, 3))
-            except:
-                print(fichier)
-                breakpoint()
             l = np.fromfile(label, dtype=np.float32)
             x = l[0]/2
             y = l[1]/2
@@ -60,19 +49,19 @@ def extract_labels(path_entree:str, path_sortie:str, etiquette_path:str):
         labels[im] = d[im]
     with open(etiquette_path, 'w') as fichier:
         json.dump(labels, fichier)
-    
-    #deplace toutes les images (balle ou pas) dans le dossier de destination
-    for i in images:
-        i = i.replace('\\', '/')
-        shutil.copy(i, path_sortie + i.split('/')[-1])
 
 def main():
-    dossier_tempo = f'{cfg_global.naovaCodePath}/Dataset/{cfg_prov.get_config().camera}/'
-    dossier_brut = cfg_prov.get_config().get_dossier('Robot', 'Brut')
-    print(dossier_brut)
+    args = args_parser.parse_args_env_cam('Convertit toutes les images brutes en PNGs dans un dossier adjacent.',
+                                         genere=True,
+                                         hardnegative=True,
+                                         testrobot=True)
+
+    env = args_parser.set_config(args, True, True)
+    #dossier_tempo = f'{cfg_global.naovaCodePath}/Dataset/{cfg_prov.get_config().camera}/'
+    dossier_tempo = cfg_prov.get_config().get_dossier(env, 'Brut')
     labels = cfg_prov.get_config().get_labels_path('Robot')
     print(labels)
-    extract_labels(dossier_tempo, dossier_brut, labels)
+    extract_labels(dossier_tempo, labels)
     
 if __name__ == '__main__':
     main()
