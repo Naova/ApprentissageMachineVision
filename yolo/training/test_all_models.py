@@ -7,6 +7,7 @@ import yolo.utils.args_parser as args_parser
 from yolo.training.dataset_loader import lire_toutes_les_images, lire_entrees
 from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 
+from focal_loss import BinaryFocalLoss
 import os
 
 def main():
@@ -23,7 +24,7 @@ def main():
 
     for fichier in fichiers[-20:]:
         print(f'\n\ntest du modele : {fichier}\n')
-        modele = keras.models.load_model(fichier)
+        modele = keras.models.load_model(fichier, custom_objects={'loss':BinaryFocalLoss})
         modele.summary()
         cfg_prov.get_config().set_model_output_resolution(modele.output_shape[1], modele.output_shape[2])
 
