@@ -6,6 +6,17 @@ from yolo.training.dataset_loader import create_dataset
 import yolo.utils.image_processing as image_processing
 import yolo.utils.args_parser as args_parser
 
+from tensorflow.keras import backend as K
+import tensorflow as tf
+
+def custom_activation(x):
+    return tf.concat(
+        (
+            K.sigmoid(x[...,0:1]),
+            K.softmax(x[..., 1:3]),
+            K.softmax(x[..., 3:5]),
+            K.softmax(x[..., 5:])
+        ), axis=-1)
 
 def kernel(x):
     return (x, x)
@@ -22,7 +33,7 @@ def create_model_upper_simulation():
     x = LeakyReLU()(x)
     x = Conv2D(32, kernel(1), kernel(1), bias_initializer='random_normal')(x)
     x = LeakyReLU()(x)
-    x = Conv2D(5 + len(cfg_prov.get_config().get_anchors()), kernel(1), kernel(1), activation='sigmoid', bias_initializer='random_normal')(x)
+    x = Conv2D(5 + len(cfg_prov.get_config().get_anchors()), kernel(1), kernel(1), activation=custom_activation, bias_initializer='random_normal')(x)
     return keras.Model(inputs=inputs, outputs=x)
 
 def create_model_lower_simulation():
@@ -36,7 +47,7 @@ def create_model_lower_simulation():
     x = MaxPool2D()(x)
     x = Conv2D(32, kernel(1), kernel(1))(x)
     x = LeakyReLU()(x)
-    x = Conv2D(5 + len(cfg_prov.get_config().get_anchors()), kernel(1), kernel(1), activation='sigmoid')(x)
+    x = Conv2D(5 + len(cfg_prov.get_config().get_anchors()), kernel(1), kernel(1), activation=custom_activation)(x)
     return keras.Model(inputs=inputs, outputs=x)
 
 def create_model_upper_robot():
@@ -55,7 +66,7 @@ def create_model_upper_robot():
     x = LeakyReLU()(x)
     x = Conv2D(32, kernel(1), kernel(1), bias_initializer='random_normal')(x)
     x = LeakyReLU()(x)
-    x = Conv2D(5 + len(cfg_prov.get_config().get_anchors()), kernel(1), kernel(1), activation='sigmoid', bias_initializer='random_normal')(x)
+    x = Conv2D(5 + len(cfg_prov.get_config().get_anchors()), kernel(1), kernel(1), activation=custom_activation, bias_initializer='random_normal')(x)
     return keras.Model(inputs=inputs, outputs=x)
 
 def create_model_lower_robot():
@@ -71,7 +82,7 @@ def create_model_lower_robot():
     x = MaxPool2D()(x)
     x = Conv2D(64, kernel(1), kernel(1))(x)
     x = LeakyReLU()(x)
-    x = Conv2D(5 + len(cfg_prov.get_config().get_anchors()), kernel(1), kernel(1), activation='sigmoid')(x)
+    x = Conv2D(5 + len(cfg_prov.get_config().get_anchors()), kernel(1), kernel(1), activation=custom_activation)(x)
     return keras.Model(inputs=inputs, outputs=x)
 
 def create_model(env):
