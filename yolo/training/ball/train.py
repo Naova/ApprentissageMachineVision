@@ -3,8 +3,9 @@ from tensorflow.keras.layers import Conv2D, MaxPool2D, SeparableConv2D, LeakyReL
 
 from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 from yolo.training.dataset_loader import create_dataset
-import yolo.utils.image_processing as image_processing
 import yolo.utils.args_parser as args_parser
+
+from focal_loss import BinaryFocalLoss
 
 from tensorflow.keras import backend as K
 import tensorflow as tf
@@ -98,7 +99,8 @@ def create_model(env):
             return create_model_lower_simulation()
 
 def train_model(modele, train_generator, validation_generator):
-    modele.compile(optimizer=keras.optimizers.Adam(), loss='binary_crossentropy')
+    loss = BinaryFocalLoss(gamma=3)
+    modele.compile(optimizer=keras.optimizers.Adam(), loss=loss)
     es = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.00001, patience=10, restore_best_weights=True)
     mc = keras.callbacks.ModelCheckpoint('modeles/modele_balles_robot_upper_{epoch:02d}.h5', monitor='val_loss')
     modele.fit(train_generator, validation_data=validation_generator, epochs=100, callbacks=[es, mc])
