@@ -1,5 +1,6 @@
 import tensorflow.keras as keras
 
+import os
 import numpy as np
 import json
 import tqdm
@@ -53,6 +54,33 @@ def copy_model_file(modele_path, time):
     print(f'copy from {modele_path} to {destination}')
     shutil.copy(modele_path, destination)
 
+def save_fp_fn(confidences_negative, confidences_positive, treshold, modele_path):
+    with open('image_fn.json', 'r') as fn:
+        fn_images_global = json.load(fn)
+    with open('image_fp.json', 'r') as fp:
+        fp_images_global = json.load(fp)
+
+    fp_images = []
+    fn_images = []
+
+    for entree, confiance, _ in confidences_positive:
+        if confiance < treshold: # faux negatif
+            print(entree.image_path)
+            fn_images.append(entree.image_path)
+    fn_images_global[modele_path] = fn_images
+
+    for entree, confiance, _ in confidences_negative:
+        if confiance > treshold: # faux positif
+            print(entree.image_path)
+            fp_images.append(entree.image_path)
+    fp_images_global[modele_path] = fp_images
+
+    with open('image_fn.json', 'w') as fn:
+        json.dump(fn_images_global, fn)
+    with open('image_fp.json', 'w') as fp:
+        json.dump(fp_images_global, fp)
+   
+
 def save_stats(confidences_negative, confidences_positive, modele_path, iou):
     time = datetime.now().strftime('%Y_%m_%d-%H-%M-%S')
 
@@ -65,6 +93,7 @@ def save_stats(confidences_negative, confidences_positive, modele_path, iou):
         stats = json.load(f)
 
     treshold = new_stats[0.01]['seuil_detection']
+
 
     false_negative = [x for x in y_pos if x <= treshold]
     true_negative = [x for x in y_neg if x <= treshold]
@@ -90,6 +119,8 @@ def save_stats(confidences_negative, confidences_positive, modele_path, iou):
         return
     else:
         print('Score bon, on sauvegarde')
+
+    save_fp_fn(confidences_negative, confidences_positive, treshold, modele_path)
 
     stats[f'{time}.h5'] = new_stats
     with open(f'stats_modeles_confidence_{cfg_prov.get_config().camera}.json', 'w') as f:

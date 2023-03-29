@@ -1,4 +1,4 @@
 import os
 import json
 
-naovaCodePath = '../NaovaCode'
+naovaCodePath = '../../../naova'
