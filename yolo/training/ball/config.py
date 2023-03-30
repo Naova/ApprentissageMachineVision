@@ -1,8 +1,6 @@
 import json
 import os
 
-import yolo.config as cfg
-
 camera = ''
 
 def get_modele_path(env='Simulation'):
