@@ -9,3 +9,4 @@ launch.json
 *.cpp
 *.zip
 *.code-workspace
+yolo/config.py

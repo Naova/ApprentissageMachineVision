@@ -10,10 +10,14 @@ from yolo.training.configuration_provider import ConfigurationProvider as cfg_pr
 import yolo.utils.args_parser as args_parser
 from yolo.training.dataset_loader import lire_toutes_les_images
 
+from yolo.training.ball.train import custom_activation
+from focal_loss import BinaryFocalLoss
+
 def main():
     args = args_parser.parse_args_env_cam('Test the yolo model on a bunch of negatives images to find hard negatives.')
     env = args_parser.set_config(args)
-    modele = keras.models.load_model(cfg_prov.get_config().get_modele_path(env))
+    modele = keras.models.load_model(cfg_prov.get_config().get_modele_path(env), custom_objects={'loss':BinaryFocalLoss, 'custom_activation':custom_activation})
+    #modele = keras.models.load_model(cfg_prov.get_config().get_modele_path(env))
     modele.summary()
 
     data = lire_toutes_les_images(cfg_prov.get_config().get_dossier('NewNegative'))

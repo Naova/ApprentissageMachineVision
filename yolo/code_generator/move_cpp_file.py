@@ -1,7 +1,6 @@
 import shutil
 
 from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
-import yolo.config as cfg_global
 import yolo.utils.args_parser as args_parser
 
 
@@ -11,7 +10,7 @@ def main():
     model_path = cfg_prov.get_config().get_modele_path(env)
     source = 'cnn_'+model_path.replace('.h5', '.cpp')
     print(source)
-    destination = f'{cfg_global.naovaCodePath}/Src/Tools/NaovaTools/'
+    destination = f'{cfg_prov.get_config().naovaCodePath}/Src/Tools/NaovaTools/'
     destination += source.replace('modele_balles', 'yolo_modele')
     print(destination)
     shutil.copy(source, destination)

@@ -6,10 +6,6 @@ from pathlib import Path
 from tqdm import tqdm
 from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 import yolo.utils.args_parser as args_parser
-import yolo.config as cfg_global
-import os.path
-import os
-import shutil
 
 def extract_labels(path_entree:str, etiquette_path:str):
     dossier_entree = Path(path_entree).glob('*')
@@ -57,7 +53,7 @@ def main():
                                          testrobot=True)
 
     env = args_parser.set_config(args, True, True)
-    #dossier_tempo = f'{cfg_global.naovaCodePath}/Dataset/{cfg_prov.get_config().camera}/'
+    #dossier_tempo = f'{cfg_prov.get_config().naovaCodePath}/Dataset/{cfg_prov.get_config().camera}/'
     dossier_tempo = cfg_prov.get_config().get_dossier(env, 'Brut')
     labels = cfg_prov.get_config().get_labels_path('Robot')
     print(labels)
