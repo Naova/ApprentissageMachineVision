@@ -26,8 +26,6 @@ def parse_args_env_cam(description: str,
     if testrobot:
         action.add_argument('-tr', '--testrobot', action='store_true',
                         help='Utiliser les photos de tests des modeles de robot.')
-        action.add_argument('-tp', '--testrobotpositive', action='store_true',
-                        help='Utiliser les photos de tests des modeles de robot.')
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument('-u', '--upper', action='store_true',
                         help='Utiliser la camera du haut.')
@@ -70,6 +68,4 @@ def set_config(args, use_robot: bool = True, use_genere: bool = False):
         return "NewNegative"
     if args.testrobot:
         return "TestRobot"
-    if args.testrobotpositive:
-        return "TestRobotPositive"
     raise Exception('Pas d''environnement valide selectionne!')
