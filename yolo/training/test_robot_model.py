@@ -8,7 +8,7 @@ import shutil
 from datetime import datetime
 
 import yolo.utils.args_parser as args_parser
-from yolo.training.dataset_loader import lire_toutes_les_images, lire_entrees
+from yolo.training.dataset_loader import load_test_set
 from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 from yolo.utils.metrics import iou_balles
 from yolo.training.ball.train import custom_activation
@@ -61,20 +61,18 @@ def save_fp_fn(confidences_negative, confidences_positive, treshold, modele_path
     with open('image_fp.json', 'r') as fp:
         fp_images_global = json.load(fp)
 
-    fp_images = []
-    fn_images = []
+    fp_images = set()
+    fn_images = set()
 
     for entree, confiance, _ in confidences_positive:
         if confiance < treshold: # faux negatif
-            print(entree.image_path)
-            fn_images.append(entree.image_path)
-    fn_images_global[modele_path] = fn_images
+            fn_images.add(entree.image_path)
+    fn_images_global[modele_path] = list(fn_images)
 
     for entree, confiance, _ in confidences_negative:
         if confiance > treshold: # faux positif
-            print(entree.image_path)
-            fp_images.append(entree.image_path)
-    fp_images_global[modele_path] = fp_images
+            fp_images.add(entree.image_path)
+    fp_images_global[modele_path] = list(fp_images)
 
     with open('image_fn.json', 'w') as fn:
         json.dump(fn_images_global, fn)
@@ -123,7 +121,7 @@ def save_stats(confidences_negative, confidences_positive, modele_path, iou):
     with open(f'stats_modeles_confidence_{cfg_prov.get_config().camera}.json', 'w') as f:
         json.dump(stats, f)
 
-    save_fp_fn(confidences_negative, confidences_positive, treshold, modele_path)
+    save_fp_fn(confidences_negative, confidences_positive, treshold, f'{time}.h5')
 
     plt.scatter(range(len(false_negative)), false_negative, s=10, color='orange')
     plt.scatter(range(len(false_negative), len(true_positive)+len(false_negative)), true_positive, s=10, color='blue')
@@ -163,9 +161,8 @@ def main():
     modele = keras.models.load_model(modele_path, custom_objects={'loss':BinaryFocalLoss, 'custom_activation':custom_activation})
     modele.summary()
     cfg_prov.get_config().set_model_output_resolution(modele.output_shape[1], modele.output_shape[2])
-    test_data_positive = lire_toutes_les_images(cfg_prov.get_config().get_dossier('TestRobotPositive'))
-    test_data_negative = lire_toutes_les_images(cfg_prov.get_config().get_dossier('TestRobot'))
-    test_data_positive += lire_entrees(cfg_prov.get_config().get_labels_path('Robot'), cfg_prov.get_config().get_dossier('Robot'), env='Robot')
+    
+    test_data_negative, test_data_positive = load_test_set()
 
     max_confidences_positive = make_predictions(modele, test_data_positive)
     max_confidences_negative = make_predictions(modele, test_data_negative)
