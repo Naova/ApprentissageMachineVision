@@ -8,7 +8,7 @@ import shutil
 from datetime import datetime
 
 import yolo.utils.args_parser as args_parser
-from yolo.training.dataset_loader import lire_toutes_les_images, lire_entrees
+from yolo.training.dataset_loader import load_test_set
 from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 from yolo.utils.metrics import iou_balles
 from yolo.training.ball.train import custom_activation
@@ -55,48 +55,38 @@ def copy_model_file(modele_path, time):
     print(f'copy from {modele_path} to {destination}')
     shutil.copy(modele_path, destination)
 
-def save_stats(confidences_negative, confidences_positive, modele_path, iou):
-    time = datetime.now().strftime('%Y_%m_%d-%H-%M-%S')
-
-    y_neg = [x[1] for x in confidences_negative]
-    y_pos = [x[1] for x in confidences_positive]
-
-    new_stats = calculate_confidence_treshold(y_neg, y_pos)
-
-    with open(f'stats_modeles_confidence_{cfg_prov.get_config().camera}.json', 'r') as f:
-        stats = json.load(f)
-
-    treshold = new_stats[0.01]['seuil_detection']
-
-    false_negative = [x for x in y_pos if x <= treshold]
-    true_negative = [x for x in y_neg if x <= treshold]
-    false_positive = [x for x in y_neg if x > treshold]
-    true_positive = [x for x in y_pos if x > treshold]
-
-    precision = 100 * len(true_positive) / (len(true_positive) + len(false_positive))
-    recall = 100 * len(true_positive) / (len(true_positive) + len(false_negative))
-    f1_score = 2 * (recall * precision) / (recall + precision)
+def save_fp_fn(confidences_negative, confidences_positive, treshold, modele_path):
+    camera = cfg_prov.get_config().camera
     
-    fp = 100 * len(false_positive) / (len(true_negative) + len(false_positive))
-    fn = 100 * len(true_positive) / (len(false_negative) + len(true_positive))
-    print(f'False positive : {fp:.2f}%')
-    print(f'True positive : {fn:.2f}%')
+    try:
+        with open(f'images_fn_{camera}.json', 'r') as fn:
+            fn_images_global = json.load(fn)
+        with open(f'images_fp_{camera}.json', 'r') as fp:
+            fp_images_global = json.load(fp)
+    except:
+        fn_images_global = {}
+        fp_images_global = {}
+
+    fp_images = set()
+    fn_images = set()
+
+    for entree, confiance, _ in confidences_positive:
+        if confiance < treshold: # faux negatif
+            fn_images.add(entree.image_path)
+    fn_images_global[modele_path] = list(fn_images)
+
+    for entree, confiance, _ in confidences_negative:
+        if confiance > treshold: # faux positif
+            fp_images.add(entree.image_path)
+    fp_images_global[modele_path] = list(fp_images)
     
-    print(f'Precision : {precision:.2f}%')
-    print(f'Recall : {recall:.2f}%')
-    print(f'F1 score : {f1_score:.2f}%')
-    print(f'Average IoU: {iou:.2f}%')
 
-    if fn < 70:
-        print('Score trop bas, ne sauvegarde pas.')
-        return
-    else:
-        print('Score bon, on sauvegarde')
+    with open(f'images_fn_{camera}.json', 'w') as fn:
+        json.dump(fn_images_global, fn)
+    with open(f'images_fp_{camera}.json', 'w') as fp:
+        json.dump(fp_images_global, fp)
 
-    stats[f'{time}.h5'] = new_stats
-    with open(f'stats_modeles_confidence_{cfg_prov.get_config().camera}.json', 'w') as f:
-        json.dump(stats, f)
-
+def create_image(false_negative, true_negative, false_positive, true_positive, precision, recall, f1_score, iou, treshold, time):
     plt.scatter(range(len(false_negative)), false_negative, s=10, color='orange')
     plt.scatter(range(len(false_negative), len(true_positive)+len(false_negative)), true_positive, s=10, color='blue')
     plt.scatter(range(len(true_negative)), true_negative, s=10, color='green')
@@ -120,6 +110,46 @@ def save_stats(confidences_negative, confidences_positive, modele_path, iou):
 
     plt.clf()
 
+def save_stats(confidences_negative, confidences_positive, modele_path, iou):
+    time = datetime.now().strftime('%Y_%m_%d-%H-%M-%S')
+
+    y_neg = [x[1] for x in confidences_negative]
+    y_pos = [x[1] for x in confidences_positive]
+
+    new_stats = calculate_confidence_treshold(y_neg, y_pos)
+
+    with open(f'stats_modeles_confidence_{cfg_prov.get_config().camera}.json', 'r') as f:
+        stats = json.load(f)
+
+    treshold = new_stats[0.01]['seuil_detection']
+
+    false_negative = [x for x in y_pos if x <= treshold]
+    true_negative = [x for x in y_neg if x <= treshold]
+    false_positive = [x for x in y_neg if x > treshold]
+    true_positive = [x for x in y_pos if x > treshold]
+
+    precision = 100 * len(true_positive) / (len(true_positive) + len(false_positive))
+    recall = 100 * len(true_positive) / (len(true_positive) + len(false_negative))
+    f1_score = 2 * (recall * precision) / (recall + precision)
+    
+    print(f'Precision : {precision:.2f}%')
+    print(f'Recall : {recall:.2f}%')
+    print(f'F1 score : {f1_score:.2f}%')
+    print(f'Average IoU: {iou:.2f}%')
+
+    if recall < cfg_prov.get_config().get_min_recall() or iou < 50:
+        print('Score trop bas, ne sauvegarde pas.')
+        return
+    else:
+        print('Score bon, on sauvegarde')
+
+    stats[f'{time}.h5'] = new_stats
+    with open(f'stats_modeles_confidence_{cfg_prov.get_config().camera}.json', 'w') as f:
+        json.dump(stats, f)
+
+    create_image(false_negative, true_negative, false_positive, true_positive, precision, recall, f1_score, iou, treshold, time)
+    save_fp_fn(confidences_negative, confidences_positive, treshold, f'{time}.h5')
+
     somme_neg = sum(y_neg)
     print(somme_neg)
     somme_pos = sum(y_pos)
@@ -135,9 +165,8 @@ def main():
     modele = keras.models.load_model(modele_path, custom_objects={'loss':BinaryFocalLoss, 'custom_activation':custom_activation})
     modele.summary()
     cfg_prov.get_config().set_model_output_resolution(modele.output_shape[1], modele.output_shape[2])
-    test_data_positive = lire_toutes_les_images(cfg_prov.get_config().get_dossier('TestRobotPositive'))
-    test_data_negative = lire_toutes_les_images(cfg_prov.get_config().get_dossier('TestRobot'))
-    test_data_positive += lire_entrees(cfg_prov.get_config().get_labels_path('Robot'), cfg_prov.get_config().get_dossier('Robot'), env='Robot')
+    
+    test_data_negative, test_data_positive = load_test_set()
 
     max_confidences_positive = make_predictions(modele, test_data_positive)
     max_confidences_negative = make_predictions(modele, test_data_negative)

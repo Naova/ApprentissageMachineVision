@@ -96,6 +96,14 @@ def lire_toutes_les_images(path:str):
     entrees += [Entree(f.split('/')[-1], {}, f, True, 'Robot') for f in fichiers]
     return entrees
 
+def load_test_set():
+    set_robot = lire_entrees(cfg_prov.get_config().get_labels_path('Robot'), cfg_prov.get_config().get_dossier('Robot'), env='Robot')
+    test_data_negative = [e for e in set_robot if not e.balles]
+    test_data_negative += lire_toutes_les_images(cfg_prov.get_config().get_dossier('TestRobot'))
+    test_data_positive = [e for e in set_robot if e.balles]
+    test_data_positive += lire_toutes_les_images(cfg_prov.get_config().get_dossier('TestRobotPositive'))
+    return test_data_negative, test_data_positive
+
 def split_dataset(entrees, ratio_train=0.9, batch_size=16):
     random.shuffle(entrees)
 
