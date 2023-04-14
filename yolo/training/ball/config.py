@@ -119,3 +119,8 @@ def get_dossier(env='Simulation', type_fichier='YCbCr'):
 def get_labels_path(env='Simulation'):
     return f'Dataset/{env}/{camera}/labels.json'
 
+def get_min_recall():
+    if camera == 'upper':
+        return 75
+    else:
+        return 80

@@ -56,10 +56,16 @@ def copy_model_file(modele_path, time):
     shutil.copy(modele_path, destination)
 
 def save_fp_fn(confidences_negative, confidences_positive, treshold, modele_path):
-    with open('image_fn.json', 'r') as fn:
-        fn_images_global = json.load(fn)
-    with open('image_fp.json', 'r') as fp:
-        fp_images_global = json.load(fp)
+    camera = cfg_prov.get_config().camera
+    
+    try:
+        with open(f'images_fn_{camera}.json', 'r') as fn:
+            fn_images_global = json.load(fn)
+        with open(f'images_fp_{camera}.json', 'r') as fp:
+            fp_images_global = json.load(fp)
+    except:
+        fn_images_global = {}
+        fp_images_global = {}
 
     fp_images = set()
     fn_images = set()
@@ -73,11 +79,36 @@ def save_fp_fn(confidences_negative, confidences_positive, treshold, modele_path
         if confiance > treshold: # faux positif
             fp_images.add(entree.image_path)
     fp_images_global[modele_path] = list(fp_images)
+    
 
-    with open('image_fn.json', 'w') as fn:
+    with open(f'images_fn_{camera}.json', 'w') as fn:
         json.dump(fn_images_global, fn)
-    with open('image_fp.json', 'w') as fp:
+    with open(f'images_fp_{camera}.json', 'w') as fp:
         json.dump(fp_images_global, fp)
+
+def create_image(false_negative, true_negative, false_positive, true_positive, precision, recall, f1_score, iou, treshold):
+    plt.scatter(range(len(false_negative)), false_negative, s=10, color='orange')
+    plt.scatter(range(len(false_negative), len(true_positive)+len(false_negative)), true_positive, s=10, color='blue')
+    plt.scatter(range(len(true_negative)), true_negative, s=10, color='green')
+    plt.scatter(range(len(true_negative), len(false_positive)+len(true_negative)), false_positive, s=10, color='red')
+    
+    plt.text(0,0.55,f'Precision : {precision:.2f}%')
+    plt.text(0,0.5,f'Recall : {recall:.2f}%')
+    plt.text(0,0.45,f'F1 Score : {f1_score:.2f}%')
+    plt.text(0,0.4,f'Avg. IoU : {iou:.2f}%')
+
+    plt.axhline(y = treshold, color = 'b', linestyle = ':')
+    plt.rcParams["axes.titlesize"] = 10
+    plt.title(f'Maximal confidence level per image from the test dataset.\n{cfg_prov.get_config().camera.capitalize()} camera.')
+    plt.xlabel('Images (sorted)')
+    plt.ylabel('Max confidence level')
+    plt.ylim(-0.05, 1.)
+    plt.legend(['Detection treshold', 'False negatives', 'True positives', 'True negatives', 'False positives'])
+    plt.grid()
+
+    plt.savefig(f'tests/{cfg_prov.get_config().camera}/{time}.png')
+
+    plt.clf()
 
 def save_stats(confidences_negative, confidences_positive, modele_path, iou):
     time = datetime.now().strftime('%Y_%m_%d-%H-%M-%S')
@@ -101,17 +132,12 @@ def save_stats(confidences_negative, confidences_positive, modele_path, iou):
     recall = 100 * len(true_positive) / (len(true_positive) + len(false_negative))
     f1_score = 2 * (recall * precision) / (recall + precision)
     
-    fp = 100 * len(false_positive) / (len(true_negative) + len(false_positive))
-    fn = 100 * len(true_positive) / (len(false_negative) + len(true_positive))
-    print(f'False positive : {fp:.2f}%')
-    print(f'True positive : {fn:.2f}%')
-    
     print(f'Precision : {precision:.2f}%')
     print(f'Recall : {recall:.2f}%')
     print(f'F1 score : {f1_score:.2f}%')
     print(f'Average IoU: {iou:.2f}%')
 
-    if fn < 70:
+    if recall < cfg_prov.get_config().get_min_recall() or iou < 50:
         print('Score trop bas, ne sauvegarde pas.')
         return
     else:
@@ -122,29 +148,6 @@ def save_stats(confidences_negative, confidences_positive, modele_path, iou):
         json.dump(stats, f)
 
     save_fp_fn(confidences_negative, confidences_positive, treshold, f'{time}.h5')
-
-    plt.scatter(range(len(false_negative)), false_negative, s=10, color='orange')
-    plt.scatter(range(len(false_negative), len(true_positive)+len(false_negative)), true_positive, s=10, color='blue')
-    plt.scatter(range(len(true_negative)), true_negative, s=10, color='green')
-    plt.scatter(range(len(true_negative), len(false_positive)+len(true_negative)), false_positive, s=10, color='red')
-    
-    plt.text(0,0.55,f'Precision : {precision:.2f}%')
-    plt.text(0,0.5,f'Recall : {recall:.2f}%')
-    plt.text(0,0.45,f'F1 Score : {f1_score:.2f}%')
-    plt.text(0,0.4,f'Avg. IoU : {iou:.2f}%')
-
-    plt.axhline(y = treshold, color = 'b', linestyle = ':')
-    plt.rcParams["axes.titlesize"] = 10
-    plt.title(f'Maximal confidence level per image from the test dataset.\n{cfg_prov.get_config().camera.capitalize()} camera.')
-    plt.xlabel('Images (sorted)')
-    plt.ylabel('Max confidence level')
-    plt.ylim(-0.05, 1.)
-    plt.legend(['Detection treshold', 'False negatives', 'True positives', 'True negatives', 'False positives'])
-    plt.grid()
-
-    plt.savefig(f'tests/{cfg_prov.get_config().camera}/{time}.png')
-
-    plt.clf()
 
     somme_neg = sum(y_neg)
     print(somme_neg)
