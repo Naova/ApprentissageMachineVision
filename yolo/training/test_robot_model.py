@@ -86,7 +86,7 @@ def save_fp_fn(confidences_negative, confidences_positive, treshold, modele_path
     with open(f'images_fp_{camera}.json', 'w') as fp:
         json.dump(fp_images_global, fp)
 
-def create_image(false_negative, true_negative, false_positive, true_positive, precision, recall, f1_score, iou, treshold):
+def create_image(false_negative, true_negative, false_positive, true_positive, precision, recall, f1_score, iou, treshold, time):
     plt.scatter(range(len(false_negative)), false_negative, s=10, color='orange')
     plt.scatter(range(len(false_negative), len(true_positive)+len(false_negative)), true_positive, s=10, color='blue')
     plt.scatter(range(len(true_negative)), true_negative, s=10, color='green')
@@ -147,6 +147,7 @@ def save_stats(confidences_negative, confidences_positive, modele_path, iou):
     with open(f'stats_modeles_confidence_{cfg_prov.get_config().camera}.json', 'w') as f:
         json.dump(stats, f)
 
+    create_image(false_negative, true_negative, false_positive, true_positive, precision, recall, f1_score, iou, treshold, time)
     save_fp_fn(confidences_negative, confidences_positive, treshold, f'{time}.h5')
 
     somme_neg = sum(y_neg)
