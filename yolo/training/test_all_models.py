@@ -6,7 +6,7 @@ from yolo.training.test_robot_model import make_predictions, save_stats
 import yolo.utils.args_parser as args_parser
 from yolo.training.dataset_loader import load_test_set
 from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
-from yolo.training.ball.train import custom_activation
+from yolo.training.ball.train import custom_activation, custom_loss
 
 from focal_loss import BinaryFocalLoss
 import os
@@ -23,7 +23,7 @@ def main():
 
     for fichier in fichiers[-20:]:
         print(f'\n\ntest du modele : {fichier}\n')
-        modele = keras.models.load_model(fichier, custom_objects={'loss':BinaryFocalLoss, 'custom_activation':custom_activation})
+        modele = keras.models.load_model(fichier, custom_objects={'custom_loss':custom_loss, 'custom_activation':custom_activation})
         modele.summary()
         cfg_prov.get_config().set_model_output_resolution(modele.output_shape[1], modele.output_shape[2])
 

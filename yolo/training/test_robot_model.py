@@ -13,6 +13,7 @@ from yolo.training.configuration_provider import ConfigurationProvider as cfg_pr
 from yolo.utils.metrics import iou_balles
 from yolo.training.ball.train import custom_activation
 from focal_loss import BinaryFocalLoss
+from yolo.training.ball.train import custom_loss
 
 
 def make_predictions(modele, test_data):
@@ -43,9 +44,7 @@ def calculate_confidence_treshold(y_neg, y_pos):
             print('Pourcentage de vrais positifs acceptés : ' + str(len([y for y in y_pos if y > i/nb_points]) / len(y_pos)))
             print('Pourcentage de faux positifs acceptés : ' + str(len([y for y in y_neg if y > i/nb_points]) / len(y_neg)))
             stats[seuil] = {
-                'seuil_detection':i/nb_points,
-                'vrai_positifs_acceptes':len([y for y in y_pos if y > i/nb_points]) / len(y_pos),
-                'faux_positifs_acceptes':len([y for y in y_neg if y > i/nb_points]) / len(y_neg),
+                'seuil_detection':i/nb_points
             }
             return stats
     return stats
@@ -132,6 +131,11 @@ def save_stats(confidences_negative, confidences_positive, modele_path, iou):
     recall = 100 * len(true_positive) / (len(true_positive) + len(false_negative))
     f1_score = 2 * (recall * precision) / (recall + precision)
     
+    new_stats[0.01]['iou'] = iou
+    new_stats[0.01]['recall'] = recall
+    new_stats[0.01]['precision'] = precision
+    new_stats[0.01]['f1_score'] = f1_score
+    
     print(f'Precision : {precision:.2f}%')
     print(f'Recall : {recall:.2f}%')
     print(f'F1 score : {f1_score:.2f}%')
@@ -148,7 +152,7 @@ def save_stats(confidences_negative, confidences_positive, modele_path, iou):
         json.dump(stats, f)
 
     create_image(false_negative, true_negative, false_positive, true_positive, precision, recall, f1_score, iou, treshold, time)
-    save_fp_fn(confidences_negative, confidences_positive, treshold, f'{time}.h5')
+    save_fp_fn(confidences_negative, confidences_positive, treshold, time)
 
     somme_neg = sum(y_neg)
     print(somme_neg)
@@ -162,7 +166,7 @@ def main():
     env = args_parser.set_config(args)
     modele_path = cfg_prov.get_config().get_modele_path(env)
     print(modele_path)
-    modele = keras.models.load_model(modele_path, custom_objects={'loss':BinaryFocalLoss, 'custom_activation':custom_activation})
+    modele = keras.models.load_model(modele_path, custom_objects={'custom_loss':custom_loss, 'custom_activation':custom_activation})
     modele.summary()
     cfg_prov.get_config().set_model_output_resolution(modele.output_shape[1], modele.output_shape[2])
     

@@ -45,8 +45,8 @@ resolutions = {
 upper_resized_image_height = 120
 upper_resized_image_width = 160
 
-lower_resized_image_height = 75
-lower_resized_image_width = 100
+lower_resized_image_height = 60
+lower_resized_image_width = 80
 
 cycle_gan_image_height = 128
 cycle_gan_image_width = 144
