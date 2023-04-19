@@ -46,13 +46,6 @@ def main():
             images.append(entree.nom)
         except:
             pass
-    name = 'changes/changes.json'
-    n = 1
-    while os.path.exists(name):
-        name = f'changes/changes{n}.json'
-        n += 1
-    with open(name, 'w') as f:
-        json.dump(images, f)
 
 if __name__ == '__main__':
     main()

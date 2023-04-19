@@ -3,7 +3,7 @@ import json
 import os
 
 def main():
-    with open('stats_modeles_confidence_upper.json', 'r') as f:
+    with open('stats_modeles_confidence_lower.json', 'r') as f:
         stats = json.load(f)
 
     pourcent_1 = "0.01"

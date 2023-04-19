@@ -7,13 +7,31 @@ import yolo.utils.args_parser as args_parser
 
 from focal_loss import BinaryFocalLoss
 
-from tensorflow.keras import backend as K
 import tensorflow as tf
+import tensorflow.keras.backend as K
+
+def custom_loss(y_true, y_pred, lambda_1 = 5, lambda_2 = 0.5):
+    obj_mask = y_true[:,:,:,0:1]
+    mask_shape = tf.shape(obj_mask)
+    noobj_mask = tf.ones(mask_shape) - obj_mask
+
+    bfl = BinaryFocalLoss(gamma=3)
+
+    #confidence
+    confidence_loss = bfl(y_true[...,0:1], y_pred[...,0:1]) * obj_mask \
+                        + bfl(y_true[...,0:1], y_pred[...,0:1]) * noobj_mask * lambda_2
+    
+    #box
+    box_loss = bfl(y_true[..., 1:], y_pred[..., 1:]) * obj_mask * lambda_1
+
+    #global
+    global_loss = tf.concat([confidence_loss, box_loss], axis=-1)
+    return global_loss
 
 def custom_activation(x):
     return tf.concat(
         (
-            K.sigmoid(x[...,0:1]),
+            K.sigmoid(x[..., 0:1]),
             K.softmax(x[..., 1:3]),
             K.softmax(x[..., 3:5]),
             K.softmax(x[..., 5:])
@@ -72,11 +90,11 @@ def create_model_upper_robot():
 
 def create_model_lower_robot():
     inputs = keras.Input(shape=(*cfg_prov.get_config().get_model_input_resolution(), 3))
-    x = SeparableConv2D(64, kernel(3), kernel(2))(inputs)
+    x = SeparableConv2D(16, kernel(3), kernel(2), padding='same')(inputs)
     x = LeakyReLU()(x)
-    x = SeparableConv2D(48, kernel(3), kernel(1), padding='same')(x)
+    x = SeparableConv2D(24, kernel(3), kernel(1), padding='same')(x)
     x = LeakyReLU()(x)
-    x = SeparableConv2D(48, kernel(3), kernel(2), padding='same')(x)
+    x = SeparableConv2D(32, kernel(3), kernel(2), padding='same')(x)
     x = LeakyReLU()(x)
     x = SeparableConv2D(48, kernel(3), kernel(1), padding='same')(x)
     x = LeakyReLU()(x)
@@ -99,10 +117,10 @@ def create_model(env):
             return create_model_lower_simulation()
 
 def train_model(modele, train_generator, validation_generator):
-    loss = BinaryFocalLoss(gamma=3)
-    modele.compile(optimizer=keras.optimizers.Adam(), loss=loss)
-    es = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.00001, patience=10, restore_best_weights=True)
-    mc = keras.callbacks.ModelCheckpoint('modeles/modele_balles_robot_upper_{epoch:02d}.h5', monitor='val_loss')
+    modele.compile(optimizer=keras.optimizers.Adam(), loss=custom_loss)
+    es = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=10, restore_best_weights=True)
+    camera = cfg_prov.get_config().camera
+    mc = keras.callbacks.ModelCheckpoint('modeles/modele_balles_robot_' + camera + '_{epoch:02d}.h5', monitor='val_loss')
     modele.fit(train_generator, validation_data=validation_generator, epochs=100, callbacks=[es, mc])
     return modele
 
