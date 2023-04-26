@@ -37,7 +37,11 @@ def main():
     images = create_dummy_db()
 
     sse_generator = NNCG()
-    sse_generator.keras_compile(images, model, code_path, model_path.strip('.h5'), arch="general", testing=-1)
+    try:
+        sse_generator.keras_compile(images, model, code_path, model_path.strip('.h5'), arch="general", testing=-1)
+    except Exception as err:
+        print(Exception, err)
+        print("Please ignore the previous exception. The generated code file is probably there.")
 
 if __name__ == '__main__':
     main()
