@@ -41,11 +41,8 @@ def main():
         dest = destination + 'batch_' + entree.image_path.split('batch_')[-1].split('_image')[0]
         if not os.path.exists(dest):
             os.makedirs(dest, exist_ok=True)
-        try:
-            shutil.move(entree.image_path, entree.image_path.replace('NewNegative', 'HardNegative'))
-            images.append(entree.nom)
-        except:
-            pass
+        shutil.move(entree.image_path, entree.image_path.replace('NewNegative', 'HardNegative'))
+        images.append(entree.nom)
 
 if __name__ == '__main__':
     main()

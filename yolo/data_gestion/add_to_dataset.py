@@ -13,12 +13,10 @@ def download_from_robot():
     ssh.load_system_host_keys()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     nao_ip = input("Nao IP : ")
-    ssh.connect(hostname=f'{nao_ip}', username='nao', password='nao')
-
+    ssh.connect(hostname=f'192.168.45.{nao_ip}', username='nao', password='nao')
+    
     scp = SCPClient(ssh.get_transport())
     
-    if not os.path.exists('Dataset/Temp/'):
-        os.mkdir('Dataset/Temp')
     scp.get('/var/volatile/Dataset/lower', recursive=True, local_path='Dataset/Robot/')
     scp.get('/var/volatile/Dataset/upper', recursive=True, local_path='Dataset/Robot/')
     
