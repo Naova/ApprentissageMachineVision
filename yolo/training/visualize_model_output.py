@@ -5,9 +5,12 @@ import numpy as np
 
 
 from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
-from yolo.training.dataset_loader import create_dataset, lire_entrees
 import yolo.utils.image_processing as image_processing
 import yolo.utils.args_parser as args_parser
+from yolo.training.dataset_loader import load_test_set
+from yolo.training.ball.train import custom_activation, custom_loss
+
+import random
 
 
 def main():
@@ -18,10 +21,14 @@ def main():
     
     if env == 'Kaggle':
         env = 'Robot'
-    test_data = lire_entrees(cfg_prov.get_config().get_labels_path(env), cfg_prov.get_config().get_dossier(env), env)
+    #test_data = lire_entrees(cfg_prov.get_config().get_labels_path(env), cfg_prov.get_config().get_dossier(env), env)
     #test_data = lire_toutes_les_images(cfg_prov.get_config().get_dossier('RobotSansBalle'))
+
+    test_data_negative, test_data_positive = load_test_set()
+    test_data = test_data_negative + test_data_positive
+    random.shuffle(test_data)
     
-    modele = keras.models.load_model(modele_path)
+    modele = keras.models.load_model(modele_path,custom_objects={'custom_loss':custom_loss, 'custom_activation':custom_activation})
     modele.summary()
     cfg_prov.get_config().set_model_output_resolution(modele.output_shape[1], modele.output_shape[2])
 

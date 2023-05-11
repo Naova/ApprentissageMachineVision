@@ -4,7 +4,10 @@ import yolo.code_generator.move_cpp_file as move_cpp_file
 
 
 def main():
-    h5_to_nncg.main()
+    try:
+        h5_to_nncg.main()
+    except:
+        pass
     fix_generated_code.main()
     move_cpp_file.main()
 

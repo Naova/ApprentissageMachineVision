@@ -2,7 +2,7 @@ import tensorflow.keras as keras
 from tensorflow.keras.layers import Conv2D, MaxPool2D, SeparableConv2D, LeakyReLU
 
 from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
-from yolo.training.dataset_loader import create_dataset, lire_entrees
+from yolo.training.dataset_loader import load_train_val_set, lire_entrees
 import yolo.utils.image_processing as image_processing
 import yolo.utils.args_parser as args_parser
 
@@ -67,7 +67,7 @@ def main():
     labels = cfg_prov.get_config().get_labels_path(env)
     dossier_ycbcr = cfg_prov.get_config().get_dossier(env, 'YCbCr')
     modele_path = cfg_prov.get_config().get_modele_path(env)
-    train_generator, validation_generator = create_dataset(0.8, 16, labels, dossier_ycbcr, env)
+    train_generator, validation_generator = load_train_val_set(0.8, 16, labels, dossier_ycbcr, env)
     train(train_generator, validation_generator, modele_path, env)
 
 

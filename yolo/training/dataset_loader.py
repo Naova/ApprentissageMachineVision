@@ -30,10 +30,6 @@ class Entree:
         if resized_image_height != image.size[1] or resized_image_width != image.size[0]:
             image = image.resize((resized_image_width, resized_image_height), Image.NEAREST)
         image = np.array(image) / 255.
-        
-        #a tester
-        #image = image + np.random.normal(scale=0.1)
-
         if self.flipper:
             return np.fliplr(image)
         return image
@@ -114,9 +110,9 @@ def split_dataset(entrees, ratio_train=0.9, batch_size=16):
 
     return train, validation
 
-def create_dataset(ratio_train, batch_size, labels_path:str, images_path:str, env:str):
+def load_train_val_set(ratio_train, batch_size, labels_path:str, images_path:str, env:str):
     entrees = lire_entrees(labels_path, images_path, env)
-    #entrees = [e for e in entrees if e.balles] ? (faut tester)
+    entrees = [e for e in entrees if e.balles]
     if env == 'Genere':
         path = cfg_prov.get_config().get_dossier('HardNegative', 'YCbCr')
         entrees += lire_toutes_les_images(path)
