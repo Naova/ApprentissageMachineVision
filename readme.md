@@ -1,6 +1,6 @@
-# Classificateur de ballons de soccer par apprentissage profond
+# Détecteur d'objets par apprentissage profond
 
-Code Python permettant d'entraîner un réseau de neurones (suivant le modèle YOLO) pour faire la détection des balles.
+Code Python permettant d'entraîner un réseau de neurones (suivant plus ou moins le modèle YOLO) pour faire la détection des balles et de robots.
 
 ## Installation et démarrage
 
@@ -11,9 +11,6 @@ Lancer l'entraînement requiert un environnement Python avec certains paquets in
 Exécuter `pip install -r requirements.txt`
 
 Il est préférable d'installer ces paquets dans un environnement virtuel.
-
-Télécharger le dataset à partir du Drive, et le dézipper dans le répertoire racine du dépot.
-Vous devriez avoir ApprentissageMachineVision/Dataset/{Robot/, Simulation/, ...}
 
 ## Utilisation
 
@@ -30,32 +27,13 @@ python yolo/training/ball/train.py -u -r -db
 
 ### Déploiement
 
-#### Génération du code
+#### Génération, ajustements et déploiement du code
 
-Le script `yolo/code_generator/h5_to_nncg.py` utilise nncg pour générer un fichier cpp. Encore une fois, il faut préciser quel modèle on veut selon l'environnement et la caméra.
+Le script `yolo/code_generator/generate_compile_and_move.py` utilise nncg pour générer un fichier cpp, fixer les erreurs que le générateur de code produit, puis déplacer le fichier au bon endroit dans NaovaCode.
 
 Exemple d'utilisation pour la caméra du haut du robot:
 ```
-python yolo/code_generator/h5_to_nncg.py -u -r -db
-```
-
-#### Ajustements du code
-
-NNCG ne génère pas du code propre à être déployé dans NaovaCode. Non seulement ça, mais il fait aussi une erreur de compilation (oups). Le script `yolo/code_generator/fix_generated_code.py` règle ces problèmes. Il est bien important de le lancer une seule fois pour un fichier cpp. Autrement, à la seconde exécution, le script brisera le code.
-Les modifications apportées au fichier cpp ne sont pas très nombreuses ni très compliquées. NNCG ne donne pas le bon type aux arguments de sa fonction; il déclare l'argument contenant le tableau de sortie comme un tableau à une dimension, mais y accède comme si c'était un tableau à trois dimensions. Le script modifie les deux arguments pour que ce soient des tableaux à une dimension. On va aussi modifier le code pour retirer des aberrations, comme des additions de 0 ou des multiplications par 1 qui se répètent un peu partout.
-Éventuellement, on pourra s'arranger pour ne plus avoir de warnings quand on make le projet.
-
-Ce script a la même interface que les autres :
-```
-python yolo/code_generator/fix_generated_code.py -u -r -db
-```
-
-#### Déplacer les fichiers
-
-Pour sauver du temps à copier-coller les fichiers .cpp, on peut simplement lancer le script `yolo/code_generator/move_cpp_file.py`, qui va copier le fichier cpp sélectionné au bon endoit dans NaovaCode. Nécessite d'avoir bien indiqué où se trouve NaovaCode sur votre ordinateur dans le fichier `config.py`.
-
-```
-python yolo/code_generator/move_cpp_file.py -u -r -db
+python yolo/code_generator/generate_compile_and_move.py -u -r -db
 ```
 
 #### Dans NaovaCode
