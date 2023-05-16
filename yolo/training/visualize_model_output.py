@@ -32,11 +32,15 @@ def main():
     modele.summary()
     cfg_prov.get_config().set_model_output_resolution(modele.output_shape[1], modele.output_shape[2])
 
-    for i, entree in enumerate(test_data):
+    for entree in test_data:
         entree_x = entree.x()
         start = process_time()
         prediction = modele.predict(np.array([entree_x]))[0]
         stop = process_time()
+        if cfg_prov.get_config().detector == 'robots':
+            entree_x = np.concatenate((entree_x,)*3, axis=-1)
+        else:
+            entree_x = image_processing.ycbcr2rgb(entree_x)
         print(entree.nom + ' : ', stop - start)
         nom = entree.nom.split('/')[-1]
         flip = 'flipped' if entree.flipper else 'original'

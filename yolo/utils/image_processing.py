@@ -91,8 +91,8 @@ def display_model_prediction(prediction, wanted_prediction, prediction_on_image,
 
 def generate_prediction_image(prediction, x_test, y_test, filename):
     coords = treshold_coord(prediction[:,:,0], 0.3)
-    prediction_on_image = draw_rectangle_on_image(ycbcr2rgb(x_test.copy()), prediction, coords)
+    prediction_on_image = draw_rectangle_on_image(x_test.copy(), prediction, coords)
     coords = treshold_coord(y_test[:,:,0])
-    wanted_output = draw_rectangle_on_image(ycbcr2rgb(x_test.copy()), y_test, coords)
+    wanted_output = draw_rectangle_on_image(x_test, y_test, coords)
     display_model_prediction(prediction[:,:,0], y_test[:,:,0], prediction_on_image, wanted_output, filename)
 

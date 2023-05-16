@@ -5,7 +5,7 @@ camera = ''
 
 def get_modele_path(env='Kaggle'):
     env = env.lower()
-    return f'modele_balles_{env}_{camera}.h5'
+    return f'modele_robots_{env}_{camera}.h5'
 
 
 #resolution de l'image d'entree
