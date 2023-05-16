@@ -30,6 +30,10 @@ class Entree:
         if resized_image_height != image.size[1] or resized_image_width != image.size[0]:
             image = image.resize((resized_image_width, resized_image_height), Image.NEAREST)
         image = np.array(image) / 255.
+
+        if cfg_prov.get_config().detector == 'robots':
+            image = image[..., 0:1]
+
         if self.flipper:
             return np.fliplr(image)
         return image
@@ -42,6 +46,9 @@ class Entree:
         for obj in objs:
             width = obj['right'] - obj['left']
             height = obj['bottom'] - obj['top']
+            if cfg_prov.get_config().detector == 'robots':
+                if width < 10 or height < 15:
+                    continue
             if self.flipper:
                 x = image_width - obj['right'] + width / 2 #centre geometrique de la boite
             else:
