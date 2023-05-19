@@ -119,7 +119,10 @@ def split_dataset(entrees, ratio_train=0.9, batch_size=16):
 
 def load_train_val_set(ratio_train, batch_size, labels_path:str, images_path:str, env:str):
     entrees = lire_entrees(labels_path, images_path, env)
-    entrees = [e for e in entrees if e.balles]
+    if cfg_prov.get_config().detector == 'balles':
+        entrees = [e for e in entrees if e.balles]
+    else:
+        entrees = [e for e in entrees if e.robots]
     if env == 'Genere':
         path = cfg_prov.get_config().get_dossier('HardNegative', 'YCbCr')
         entrees += lire_toutes_les_images(path)
