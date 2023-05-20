@@ -1,7 +1,7 @@
 import tensorflow.keras as keras
 from tensorflow.keras.layers import Conv2D, MaxPool2D, SeparableConv2D, LeakyReLU
 
-from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
+from yolo.utils.configuration_provider import ConfigurationProvider as cfg_prov
 from yolo.training.dataset_loader import load_train_val_set
 import yolo.utils.args_parser as args_parser
 
@@ -9,6 +9,12 @@ from focal_loss import BinaryFocalLoss
 
 import tensorflow as tf
 import tensorflow.keras.backend as K
+
+def load_model(modele_path = None, env = None):
+    if modele_path is None:
+        modele_path = cfg_prov.get_config().get_modele_path(env)
+    modele = keras.models.load_model(modele_path, custom_objects={'custom_loss':custom_loss, 'custom_activation':custom_activation})
+    return modele
 
 def custom_loss(y_true, y_pred, lambda_1 = 5, lambda_2 = 0.5):
     obj_mask = y_true[:,:,:,0:1]

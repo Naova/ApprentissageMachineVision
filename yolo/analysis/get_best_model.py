@@ -1,7 +1,5 @@
 import json
 
-import os
-
 def main():
     with open('stats_modeles_confidence_upper.json', 'r') as f:
         stats = json.load(f)

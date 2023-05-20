@@ -6,7 +6,7 @@ import os
 
 from PIL import Image
 
-from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
+from yolo.utils.configuration_provider import ConfigurationProvider as cfg_prov
 from yolo.training.keras_sequence import KerasSequence
 
 def best_anchor_balle(anchors, rayon):

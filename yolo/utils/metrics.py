@@ -1,6 +1,6 @@
 import numpy as np
 
-from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
+from yolo.utils.configuration_provider import ConfigurationProvider as cfg_prov
 
 def IoU(boite1, boite2):
     #gauche haut droite bas

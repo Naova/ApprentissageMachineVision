@@ -1,6 +1,6 @@
 import argparse
 
-from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
+from yolo.utils.configuration_provider import ConfigurationProvider as cfg_prov
 
 def parse_args_env_cam(description: str,
                         genere: bool = False,

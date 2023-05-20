@@ -2,7 +2,7 @@ from skimage.draw import rectangle_perimeter
 import matplotlib.pyplot as plt
 import numpy as np
 
-from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
+from yolo.utils.configuration_provider import ConfigurationProvider as cfg_prov
 
 def draw_rectangle_on_image(input_image, yolo_output, coords):
     resized_image_height, resized_image_width = cfg_prov.get_config().get_model_input_resolution()
