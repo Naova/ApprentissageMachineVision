@@ -1,4 +1,4 @@
-from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
+from yolo.utils.configuration_provider import ConfigurationProvider as cfg_prov
 
 import yolo.utils.args_parser as args_parser
 

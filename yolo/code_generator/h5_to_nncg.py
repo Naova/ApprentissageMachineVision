@@ -8,8 +8,8 @@ import tensorflow.keras as keras
 from nncg.nncg import NNCG
 
 import yolo.utils.args_parser as args_parser
-from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
-from yolo.training.ball.train import custom_activation
+from yolo.utils.configuration_provider import ConfigurationProvider as cfg_prov
+from yolo.training.ball.train import load_model
 
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
@@ -22,7 +22,7 @@ def main():
     args = args_parser.parse_args_env_cam('Convertit un modele keras (.h5) en un fichier .cpp reproduisant l\'execution du modele.')
     env = args_parser.set_config(args)
     model_path = cfg_prov.get_config().get_modele_path(env)
-    model = keras.models.load_model(model_path, custom_objects={'custom_activation':custom_activation}, compile=False)
+    model = load_model(env=env)
     model.summary()
 
     #pas particulierement catholique

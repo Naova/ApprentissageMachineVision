@@ -1,5 +1,3 @@
-import tensorflow.keras as keras
-
 import numpy as np
 import json
 import tqdm
@@ -11,9 +9,7 @@ import yolo.utils.args_parser as args_parser
 from yolo.training.dataset_loader import load_test_set
 from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
 from yolo.utils.metrics import iou_balles
-from yolo.training.ball.train import custom_activation
-from focal_loss import BinaryFocalLoss
-from yolo.training.ball.train import custom_loss
+from yolo.training.ball.train import load_model
 
 
 def make_predictions(modele, test_data):
@@ -166,7 +162,7 @@ def main():
     env = args_parser.set_config(args)
     modele_path = cfg_prov.get_config().get_modele_path(env)
     print(modele_path)
-    modele = keras.models.load_model(modele_path, custom_objects={'custom_loss':custom_loss, 'custom_activation':custom_activation})
+    modele = load_model(env=env)
     modele.summary()
     cfg_prov.get_config().set_model_output_resolution(modele.output_shape[1], modele.output_shape[2])
     

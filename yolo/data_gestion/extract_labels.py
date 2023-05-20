@@ -4,7 +4,7 @@ import numpy as np
 import json
 from pathlib import Path
 from tqdm import tqdm
-from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
+from yolo.utils.configuration_provider import ConfigurationProvider as cfg_prov
 import yolo.utils.args_parser as args_parser
 
 def extract_labels(path_entree:str, etiquette_path:str):

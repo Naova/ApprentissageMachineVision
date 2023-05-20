@@ -1,7 +1,7 @@
 import tensorflow.keras as keras
 from tensorflow.keras.layers import Conv2D, MaxPool2D, SeparableConv2D, LeakyReLU
 
-from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
+from yolo.utils.configuration_provider import ConfigurationProvider as cfg_prov
 from yolo.training.dataset_loader import load_train_val_set
 import yolo.utils.args_parser as args_parser
 

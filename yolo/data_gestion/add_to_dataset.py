@@ -1,12 +1,13 @@
 import argparse
 import os
 
+import numpy as np
 from pathlib import Path
 import paramiko
 from paramiko import SSHClient
 from scp import SCPClient
 
-from yolo.training.configuration_provider import ConfigurationProvider as cfg_prov
+from yolo.utils.configuration_provider import ConfigurationProvider as cfg_prov
 
 def download_from_robot():
     ssh = SSHClient()

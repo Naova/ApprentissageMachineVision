@@ -1,5 +1,3 @@
-import tensorflow.keras as keras
-
 from time import process_time
 import numpy as np
 
@@ -8,7 +6,7 @@ from yolo.training.configuration_provider import ConfigurationProvider as cfg_pr
 import yolo.utils.image_processing as image_processing
 import yolo.utils.args_parser as args_parser
 from yolo.training.dataset_loader import load_test_set
-from yolo.training.ball.train import custom_activation, custom_loss
+from yolo.training.ball.train import load_model
 
 import random
 
@@ -16,8 +14,6 @@ import random
 def main():
     args = args_parser.parse_args_env_cam('Train a yolo model to detect balls on an image.')
     env = args_parser.set_config(args, use_robot=True)
-    
-    modele_path = cfg_prov.get_config().get_modele_path(env)
     
     if env == 'Kaggle':
         env = 'Robot'
@@ -28,7 +24,7 @@ def main():
     test_data = test_data_negative + test_data_positive
     random.shuffle(test_data)
     
-    modele = keras.models.load_model(modele_path,custom_objects={'custom_loss':custom_loss, 'custom_activation':custom_activation})
+    modele = load_model(env=env)
     modele.summary()
     cfg_prov.get_config().set_model_output_resolution(modele.output_shape[1], modele.output_shape[2])
 
