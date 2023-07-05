@@ -21,7 +21,7 @@ def remove_next_bracket_pair(text: str):
 def change_variable_access_method(full_text: str, variable: str):
     var_index = full_text.index(variable+'[')
     if variable == 'x_0':
-        shape = (*cfg_prov.get_config().get_model_input_resolution(), 3)
+        shape = (*cfg_prov.get_config().get_model_input_resolution(), cfg_prov.get_config().input_color_channels)
     else:
         second_occurence = full_text.split(variable)[2]
         indice_name = second_occurence.split('][')[1]
