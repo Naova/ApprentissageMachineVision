@@ -54,7 +54,7 @@ def get_model_output_resolution():
     else:
         return lower_yolo_height, lower_yolo_width
 
-#a modifier
+input_color_channels = 1
 yolo_nb_anchors_upper = 3
 yolo_nb_anchors_lower = 3
 
