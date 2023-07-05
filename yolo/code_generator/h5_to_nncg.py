@@ -27,7 +27,7 @@ def main():
 
     #pas particulierement catholique
     if model.layers[-1].activation.__name__ == "custom_activation":
-        new_last_layer = keras.layers.Conv2D(5 + len(cfg_prov.get_config().get_anchors()), (1, 1), (1, 1), activation='sigmoid')(model.layers[-2].output)
+        new_last_layer = keras.layers.Conv2D(5 + len(cfg_prov.get_config().get_anchors()), (1, 1), (1, 1), activation='sigmoid', name='tomate')(model.layers[-2].output)
         model2 = keras.Model(inputs=model.layers[0].input, outputs=new_last_layer)
         model2.set_weights(model.get_weights())
         model = model2

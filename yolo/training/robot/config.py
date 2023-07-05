@@ -55,7 +55,7 @@ def get_model_output_resolution():
         return lower_yolo_height, lower_yolo_width
 
 #a modifier
-yolo_nb_anchors_upper = 6
+yolo_nb_anchors_upper = 3
 yolo_nb_anchors_lower = 3
 
 def get_nb_anchors():

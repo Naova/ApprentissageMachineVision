@@ -1,9 +1,10 @@
 import tensorflow.keras as keras
 from tensorflow.keras.layers import Conv2D, MaxPool2D, SeparableConv2D, LeakyReLU
 
-from yolo.utils.configuration_provider import ConfigurationProvider as cfg_prov
+from yolo.training.ball.train import custom_loss, custom_activation
 from yolo.training.dataset_loader import load_train_val_set
 import yolo.utils.args_parser as args_parser
+from yolo.utils.configuration_provider import ConfigurationProvider as cfg_prov
 
 from focal_loss import BinaryFocalLoss
 
@@ -12,17 +13,28 @@ def kernel(x):
 
 def create_model_upper():
     inputs = keras.Input(shape=(*cfg_prov.get_config().get_model_input_resolution(), 1))
-    x = SeparableConv2D(16, kernel(3), kernel(2), padding='same', bias_initializer='random_normal')(inputs)
+    x = Conv2D(16, kernel(3), kernel(1), padding='same')(inputs)
     x = LeakyReLU(alpha=0.1)(x)
-    x = SeparableConv2D(24, kernel(3), kernel(1), padding='same', bias_initializer='random_normal')(x)
+    x = SeparableConv2D(24, kernel(3), kernel(1), padding='same')(x)
     x = LeakyReLU(alpha=0.1)(x)
-    x = SeparableConv2D(24, kernel(3), kernel(2), padding='same', bias_initializer='random_normal')(x)
+    x = SeparableConv2D(16, kernel(3), kernel(2), padding='same')(x)
     x = LeakyReLU(alpha=0.1)(x)
-    x = SeparableConv2D(32, kernel(3), kernel(2), padding='same', bias_initializer='random_normal')(x)
+    
+    x = SeparableConv2D(24, kernel(3), kernel(1), padding='same')(x)
     x = LeakyReLU(alpha=0.1)(x)
-    x = Conv2D(32, kernel(1), kernel(1), bias_initializer='random_normal')(x)
+    x = SeparableConv2D(24, kernel(3), kernel(2), padding='same')(x)
     x = LeakyReLU(alpha=0.1)(x)
-    x = Conv2D(5 + len(cfg_prov.get_config().get_anchors()), kernel(1), kernel(1), activation='sigmoid', bias_initializer='random_normal')(x)
+
+    x = SeparableConv2D(32, kernel(3), kernel(1), padding='same')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    x = SeparableConv2D(24, kernel(3), kernel(2), padding='same')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    
+    x = SeparableConv2D(24, kernel(3), kernel(1), padding='same')(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    x = Conv2D(32, kernel(1), kernel(1))(x)
+    x = LeakyReLU(alpha=0.1)(x)
+    x = Conv2D(5 + len(cfg_prov.get_config().get_anchors()), kernel(1), kernel(1), activation=custom_activation)(x)
     return keras.Model(inputs=inputs, outputs=x)
 
 def create_model_lower():
@@ -44,7 +56,7 @@ def create_model(env):
         return create_model_lower()
 
 def train_model(modele, train_generator, validation_generator):
-    modele.compile(optimizer=keras.optimizers.Adam(), loss=BinaryFocalLoss(gamma=2))
+    modele.compile(optimizer=keras.optimizers.Adam(), loss=custom_loss)
     es = keras.callbacks.EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
     mc = keras.callbacks.ModelCheckpoint('modeles/modele_robots_robot_upper_{epoch:02d}.h5', monitor='val_loss')
     modele.fit(train_generator, validation_data=validation_generator, epochs=1000, callbacks=[es, mc])
