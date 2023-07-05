@@ -13,7 +13,7 @@ def best_anchor_balle(anchors, rayon):
     distances = [abs(a - rayon) for a in anchors]
     return distances.index(min(distances))
 def best_anchor_robot(anchors, boite):
-    distances = [abs(a[0] - boite[0]) + abs(a[1] - boite[1]) for a in anchors]
+    distances = [abs(a - boite) for a in anchors]
     return distances.index(min(distances))
 
 class Entree:
@@ -53,7 +53,10 @@ class Entree:
                 x = image_width - obj['right'] + width / 2 #centre geometrique de la boite
             else:
                 x = obj['left'] + width / 2 #centre geometrique de la boite
-            y = obj['top'] + height / 2 #centre geometrique de la boite
+            if cfg_prov.get_config().detector == 'balles':
+                y = obj['top'] + height / 2 #centre geometrique de la boite
+            else:
+                y = obj['bottom'] #detecteur de pieds (?!)
             center_x = int(x / image_width * yolo_width)
             center_y = int(y / image_height * yolo_height)
             center = (center_y, center_x)
@@ -76,8 +79,7 @@ class Entree:
                 rayon = max(width, height) / image_width / 2
                 best_anchor_index = best_anchor_balle(anchors, rayon)
             else:
-                boite = (width, height)
-                best_anchor_index = best_anchor_robot(anchors, boite)
+                best_anchor_index = best_anchor_robot(anchors, width)
             value[center][5 + best_anchor_index] = 1 #boite anchor
         return value
 
@@ -126,5 +128,6 @@ def load_train_val_set(ratio_train, batch_size, labels_path:str, images_path:str
     if env == 'Genere':
         path = cfg_prov.get_config().get_dossier('HardNegative', 'YCbCr')
         entrees += lire_toutes_les_images(path)
+    #entrees = [e for e in entrees if 'epoch_12' in e.image_path]
     train, validation = split_dataset(entrees, ratio_train, batch_size)
     return train, validation

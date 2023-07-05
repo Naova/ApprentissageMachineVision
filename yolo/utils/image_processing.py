@@ -32,12 +32,16 @@ def draw_rectangle_on_image(input_image, yolo_output, coords):
             input_resolution = cfg_prov.get_config().get_image_resolution('Kaggle')
             box = (
                 anchors[anchor_index][0] * resized_image_width / input_resolution[0],
-                anchors[anchor_index][1] * resized_image_height / input_resolution[1]
+                anchors[anchor_index][1] * resized_image_width / input_resolution[1]
             )
             left = int(center_x - box[0]/2)
-            top = int(center_y - box[1]/2)
             right = int(center_x + box[0]/2)
-            bottom = int(center_y + box[1]/2)
+            if cfg_prov.get_config().detector == 'robots':
+                top = int(center_y - box[1])
+                bottom = int(center_y)
+            else:
+                top = int(center_y - box[1]/2)
+                bottom = int(center_y + box[1]/2)
         rect = rectangle_perimeter((top, left), (bottom, right), shape=(resized_image_height, resized_image_width), clip=True)
         input_image[rect] = 1
     return input_image
@@ -90,7 +94,7 @@ def display_model_prediction(prediction, wanted_prediction, prediction_on_image,
     plt.clf()
 
 def generate_prediction_image(prediction, x_test, y_test, filename):
-    coords = treshold_coord(prediction[:,:,0], 0.3)
+    coords = treshold_coord(prediction[:,:,0], 0.45)
     prediction_on_image = draw_rectangle_on_image(x_test.copy(), prediction, coords)
     coords = treshold_coord(y_test[:,:,0])
     wanted_output = draw_rectangle_on_image(x_test, y_test, coords)
