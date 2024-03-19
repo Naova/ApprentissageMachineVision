@@ -3,6 +3,7 @@ from pathlib import Path
 import json
 import random
 import os
+import re
 
 from PIL import Image
 
@@ -83,7 +84,8 @@ def lire_entrees(labels_path:str, data_path:str, env:str = 'Simulation'):
     with open(labels_path) as fichier:
         labels = json.loads(fichier.read())
     for image_label in labels:
-        fichier_image = data_path + image_label
+        match = re.match(r'^(batch_\d+)', image_label)
+        fichier_image = data_path + match.group(1) +'/'+ image_label
         if os.path.exists(fichier_image):
             entrees.append(Entree(image_label, labels[image_label], fichier_image, True, env))
             entrees.append(Entree(image_label, labels[image_label], fichier_image, False, env))

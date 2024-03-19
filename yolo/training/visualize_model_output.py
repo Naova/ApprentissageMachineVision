@@ -8,6 +8,7 @@ from yolo.training.configuration_provider import ConfigurationProvider as cfg_pr
 from yolo.training.dataset_loader import create_dataset, lire_entrees
 import yolo.utils.image_processing as image_processing
 import yolo.utils.args_parser as args_parser
+from yolo.training.ball.train import custom_activation
 
 
 def main():
@@ -15,13 +16,12 @@ def main():
     env = args_parser.set_config(args, use_robot=True)
     
     modele_path = cfg_prov.get_config().get_modele_path(env)
-    
     if env == 'Kaggle':
         env = 'Robot'
     test_data = lire_entrees(cfg_prov.get_config().get_labels_path(env), cfg_prov.get_config().get_dossier(env), env)
     #test_data = lire_toutes_les_images(cfg_prov.get_config().get_dossier('RobotSansBalle'))
     
-    modele = keras.models.load_model(modele_path)
+    modele = keras.models.load_model(modele_path, custom_objects={'custom_activation':custom_activation}, compile=False)
     modele.summary()
     cfg_prov.get_config().set_model_output_resolution(modele.output_shape[1], modele.output_shape[2])
 

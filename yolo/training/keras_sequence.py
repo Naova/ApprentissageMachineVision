@@ -10,7 +10,7 @@ class KerasSequence(keras.utils.Sequence):
         self.y_function = y_function
     
     def __len__(self):
-        return (np.ceil(len(self.entries) / float(self.batch_size))).astype(np.int)
+        return (np.ceil(len(self.entries) / float(self.batch_size))).astype(np.int64)
     
     def __getitem__(self, idx):
         batch_x = [self.x_function(entry) for entry in self.entries[idx * self.batch_size : (idx+1) * self.batch_size]]

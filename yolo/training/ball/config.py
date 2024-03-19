@@ -7,7 +7,7 @@ def get_modele_path(env='Simulation'):
     env = env.lower()
     if env == 'genere':
         env = 'robot'
-    return f'modele_balles_{env}_{camera}.h5'
+    return f'modele_balles_{env}_{camera}.keras'
 
 
 #resolution de l'image d'entree
