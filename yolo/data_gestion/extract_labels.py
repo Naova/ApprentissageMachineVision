@@ -8,8 +8,8 @@ from yolo.training.configuration_provider import ConfigurationProvider as cfg_pr
 import yolo.utils.args_parser as args_parser
 
 def extract_labels(path_entree:str, etiquette_path:str):
-    dossier_entree = Path(path_entree).glob('*')
-    fichiers = [str(x) for x in dossier_entree if x.is_file() and 'gitignore' not in str(x)]
+    dossier_entree = Path(path_entree).rglob('*')
+    fichiers = [str(x) for x in dossier_entree if x.is_file() and not x.suffix == '.json']
     #match toutes les images etiquetees avec leurs etiquettes
     labels = [f for f in fichiers if 'label' in f]
     images = [l.replace('_label', '') for l in labels]
@@ -53,9 +53,9 @@ def main():
                                          testrobot=True)
 
     env = args_parser.set_config(args, True, True)
-    #dossier_tempo = f'{cfg_prov.get_config().naovaCodePath}/Dataset/{cfg_prov.get_config().camera}/'
-    dossier_tempo = cfg_prov.get_config().get_dossier(env, 'Brut')
-    labels = cfg_prov.get_config().get_labels_path('Robot')
+    dossier_tempo = f'Dataset/Simulation/{cfg_prov.get_config().camera}/'
+    #dossier_tempo = cfg_prov.get_config().get_dossier(env, 'Brut')
+    labels = cfg_prov.get_config().get_labels_path('Simulation')
     print(labels)
     extract_labels(dossier_tempo, labels)
     

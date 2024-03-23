@@ -10,3 +10,4 @@ launch.json
 *.zip
 *.code-workspace
 yolo/config.py
+.keras
